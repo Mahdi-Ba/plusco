@@ -19,5 +19,5 @@ coverage.*
 !.travis.yml
 !.isort.cfg
 
-talent/settings.py
+plusco/settings.py
 /media
