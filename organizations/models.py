@@ -2,8 +2,10 @@ from datetime import datetime
 from ckeditor_uploader.fields import RichTextUploadingField
 from django.db import models
 from users.models import User
+
 class Status(models.Model):
     title = models.CharField(max_length=255,unique=True)
+    order = models.IntegerField(default=None)
 
     def __str__(self):
         return self.title
@@ -119,3 +121,44 @@ class Relation(models.Model):
     source = models.ForeignKey(Factory,related_name='source',on_delete=models.SET_NULL,null=True)
     target = models.ForeignKey(Factory,related_name='target',on_delete=models.SET_NULL,null=True)
     type = models.ForeignKey(RelationType,on_delete=models.SET_NULL,null=True)
+
+
+class Department(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='depowner')
+    title = models.CharField(max_length=255,blank=True,null=True)
+    factory = models.ForeignKey(Factory, on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.title)
+
+class UserAuthority(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.user.mobile)
+
+
+class AdminGroup(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='adminowner')
+    factory = models.OneToOneField(Factory, on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.factory.title +"(" +self.factory.organization.title + ")")
+
+
+
+class AdminUser(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    admin_group = models.ForeignKey(AdminGroup, on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.user.mobile)
+
+
