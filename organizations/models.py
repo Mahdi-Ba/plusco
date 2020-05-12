@@ -105,7 +105,7 @@ class Factory(models.Model):
         return super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.title
+        return self.title + "("+ self.organization.title + ")"
 
 class RelationType(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
@@ -149,7 +149,7 @@ class AdminGroup(models.Model):
     status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
-        return str(self.factory.title +"(" +self.factory.organization.title + ")")
+        return str(self.factory)
 
 
 

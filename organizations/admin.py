@@ -135,13 +135,13 @@ class AdminUserModel(admin.TabularInline):
 @admin.register(AdminGroup)
 class AdminGroupAdmin(admin.ModelAdmin):
     inlines = (AdminUserModel,)
-    list_display = ['owner', 'factory', 'user', 'status','organization']
+    list_display = ['owner', 'factory', 'user', 'status']
     search_fields = ['owner', ]
     list_filter = ['status',]
     autocomplete_fields = ['owner', 'factory', 'status']
 
-    def organization(self, obj):
-        return obj.factory.organization.title
+    # def organization(self, obj):
+    #     return obj.factory.organization.title
 
 
 
