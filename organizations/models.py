@@ -98,6 +98,9 @@ class Factory(models.Model):
     sort = models.BigIntegerField(null=True, blank=True)
     relation = models.ManyToManyField('self', through='Relation',through_fields=('source','target'), symmetrical=False)
 
+    class Meta:
+        unique_together = ('organization', 'title',)
+
 
 
     def save(self, *args, **kwargs):
