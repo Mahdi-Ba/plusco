@@ -136,9 +136,35 @@ class Department(models.Model):
     def __str__(self):
         return str(self.title)
 
+class Category(models.Model):
+    title = models.CharField(max_length=255,unique=True)
+    factory = models.ForeignKey(Factory, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.title)
+
+class Area(models.Model):
+    title = models.CharField(max_length=255, unique=True)
+    factory = models.ForeignKey(Factory, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.title)
+
+class Part(models.Model):
+    title = models.CharField(max_length=255, unique=True)
+    area = models.ForeignKey(Area, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.title)
+
+class Position(models.Model):
+    title = models.CharField(max_length=255, unique=True)
+
+
 class UserAuthority(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+    position = models.ForeignKey(Position, on_delete=models.SET_NULL, null=True, blank=True)
     status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):

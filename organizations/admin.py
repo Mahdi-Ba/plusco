@@ -10,6 +10,7 @@ class StatusAdmin(admin.ModelAdmin):
     search_fields = ['title']
 
 
+
 @admin.register(WorkingArea)
 class WorkingAreaAdmin(admin.ModelAdmin):
     list_display = ['title', 'en_title', 'user', 'sort', 'status', 'updated_at']
@@ -60,6 +61,47 @@ class RelationTypeAdmin(admin.ModelAdmin):
     search_fields = ['user', ]
 
 
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ['title','factory' ]
+    search_fields = ['title']
+
+class CategoryModel(admin.TabularInline):
+    model = Category
+    extra = 1
+
+
+class PartModel(admin.TabularInline):
+    model = Part
+    extra = 1
+
+
+@admin.register(Area)
+class AreaAdmin(admin.ModelAdmin):
+    inlines = [PartModel]
+    list_display = ['title', 'factory']
+    search_fields = ['title']
+
+class AreaModel(admin.TabularInline):
+    model = Area
+    extra = 1
+
+
+
+@admin.register(Part)
+class PartAdmin(admin.ModelAdmin):
+    list_display = ['title','area' ]
+    search_fields = ['title']
+
+@admin.register(Position)
+class PositionAdmin(admin.ModelAdmin):
+    list_display = ['title']
+    search_fields = ['title']
+
+
+
 class RelModel(admin.TabularInline):
     model = Relation
     readonly_fields = ('user', 'owner')
@@ -77,7 +119,7 @@ class DpartModel(admin.TabularInline):
 
 @admin.register(Factory)
 class FactoryAdmin(admin.ModelAdmin):
-    inlines = (RelModel, DpartModel)
+    inlines = (RelModel, DpartModel,CategoryModel,AreaModel)
 
     list_display = ['title', 'organization', 'en_title', 'owner', 'size', 'sort', 'status', 'user', 'updated_at']
     search_fields = ['title', 'en_title']
@@ -97,7 +139,7 @@ class FactoryAdmin(admin.ModelAdmin):
 
 
 class AuthorityModel(admin.TabularInline):
-    autocomplete_fields = ['user', 'department', 'status']
+    autocomplete_fields = ['user', 'department', 'status','position']
     model = UserAuthority
     extra = 1
 

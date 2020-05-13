@@ -46,9 +46,22 @@ INSTALLED_APPS = [
     'ckeditor_uploader',
     'django_json_widget',
     'drf_yasg',
+    'organizations',
+    'reports',
+    "fcm_django"
+
     # 'rest_framework_swagger',
 
 ]
+
+
+
+FCM_DJANGO_SETTINGS = {
+        "APP_VERBOSE_NAME": "fcm",
+        "FCM_SERVER_KEY": "[your api key]",
+}
+
+
 AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
