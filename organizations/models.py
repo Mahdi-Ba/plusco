@@ -95,6 +95,8 @@ class Factory(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now_add=True)
     index = models.BooleanField(default=False)
+    trusted = models.BooleanField(default=False)
+    master = models.BooleanField(default=False)
     sort = models.BigIntegerField(null=True, blank=True)
     relation = models.ManyToManyField('self', through='Relation',through_fields=('source','target'), symmetrical=False)
 
