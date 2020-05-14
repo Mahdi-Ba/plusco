@@ -52,7 +52,7 @@ class User(AbstractUser):
     expire_pass = models.BooleanField(default=True)
     file = models.ImageField(upload_to='users/',blank=True, null=True)
     email = models.EmailField(null=True, blank=True)
-    trusted = models.BooleanField(default=False)
+    # trusted = models.BooleanField(default=False)
     # attrs = JSONField(null=True, blank=True)
     # content = RichTextField( blank=True, null=True)
     # content = RichTextUploadingField( blank=True, null=True)
