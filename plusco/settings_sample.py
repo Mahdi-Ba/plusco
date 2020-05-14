@@ -118,8 +118,8 @@ CACHES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'plascodb',
-        'USER': 'plascouser',
+        'NAME': 'plascouser',
+        'USER': 'plascodb',
         'PASSWORD': 'Mnujs5_tkr39B4',
         'HOST': '127.0.0.1',  # Or an IP Address that your DB is hosted on
         'PORT': '3306',
