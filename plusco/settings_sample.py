@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     'drf_yasg',
     'organizations',
     'reports',
-    "fcm_django"
+    "fcm_django",
+    "pages",
 
     # 'rest_framework_swagger',
 
