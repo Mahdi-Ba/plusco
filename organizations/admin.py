@@ -143,10 +143,15 @@ class AuthorityModel(admin.TabularInline):
     model = UserAuthority
     extra = 1
 
+class PositionModel(admin.TabularInline):
+    list_display = ['title']
+    model = Position
+    extra = 1
+
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
-    inlines = (AuthorityModel,)
+    inlines = (AuthorityModel,PositionModel)
 
     list_display = ['title', 'user', 'status', 'factory']
     search_fields = ['title', ]

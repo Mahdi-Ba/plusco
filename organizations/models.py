@@ -161,6 +161,8 @@ class Part(models.Model):
 
 class Position(models.Model):
     title = models.CharField(max_length=255, unique=True)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+
 
 
 class UserAuthority(models.Model):
