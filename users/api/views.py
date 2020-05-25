@@ -49,16 +49,16 @@ class NewPasswd(APIView):
 
         new_pass = random.randint(11111, 99999)
 
+        # params = {
+        #     'receptor': request.data['mobile'],
+        #     'message': "تلنتو " + "\n" + "رمز عبور: " + str(new_pass),
+        # }
+
+        # response = api.sms_send(params)
+
         params = {
             'receptor': request.data['mobile'],
-            'message': "تلنتو " + "\n" + "رمز عبور: " + str(new_pass),
-        }
-
-        response = api.sms_send(params)
-
-        params = {
-            'receptor': request.data['mobile'],
-            'template': 'test',
+            'template': 'plasco',
             'token': new_pass,
             'type': 'sms',
         }
