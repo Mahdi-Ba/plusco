@@ -10,6 +10,13 @@ class StatusAdmin(admin.ModelAdmin):
     search_fields = ['title']
 
 
+@admin.register(ActionStatus)
+class ActionStatusAdmin(admin.ModelAdmin):
+    list_display = ['title', 'order']
+    search_fields = ['title']
+
+
+
 class ConformityGalleryModel(admin.TabularInline):
     model = ConformityGallery
     extra = 1

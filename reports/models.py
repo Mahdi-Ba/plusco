@@ -38,13 +38,21 @@ class ConformityGallery(models.Model):
     file = models.FileField(upload_to='conformity/', null=True, blank=True)
 
 
+
+class ActionStatus(models.Model):
+    title = models.CharField(max_length=255, unique=True)
+    order = models.IntegerField(default=None)
+
+    def __str__(self):
+        return self.title
+
 class Action(models.Model):
     is_publish = models.BooleanField(default=True)
     publisher = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    followe_status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True,related_name='follower_status')
+    followe_status = models.ForeignKey(ActionStatus, on_delete=models.SET_NULL, null=True, blank=True,related_name='follower_status')
     follower_department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True,related_name='follower_dep')
     execute_owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,related_name='execute_owner')
-    executiv_status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True,related_name='executive_status')
+    executiv_status = models.ForeignKey(ActionStatus, on_delete=models.SET_NULL, null=True, blank=True,related_name='executive_status')
     execute_department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True,related_name='execute_dep')
     follower_owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,related_name='follower_owner')
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,related_name='action_owner')
