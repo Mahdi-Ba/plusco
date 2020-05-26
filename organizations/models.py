@@ -82,7 +82,7 @@ class Factory(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True, blank=True,related_name='userresume')
     size = models.ForeignKey(OrganizationSize, on_delete=models.SET_NULL, null=True, blank=True)
     working_area = models.ManyToManyField(WorkingArea, blank=True)
-    title = models.CharField(max_length=255, null=True, blank=True,unique=True)
+    title = models.CharField(max_length=255, null=True, blank=True)
     en_title = models.CharField(max_length=255, null=True, blank=True,unique=True)
     image = models.ImageField(upload_to='company/', null=True, blank=True)
     image_alt = models.CharField(max_length=255, null=True, blank=True)
@@ -162,6 +162,10 @@ class Part(models.Model):
 class Position(models.Model):
     title = models.CharField(max_length=255, unique=True)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.title)
+
 
 
 
