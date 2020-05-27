@@ -8,6 +8,8 @@ urlpatterns = [
     path('org/', views.OrganizationView.as_view(), name=None),
     path('org/<int:pk>/factory', views.OrgFactoryView.as_view(), name=None),
     path('factory/', views.FactoryView.as_view(), name=None),
+    path('factory/<int:pk>/department', views.FactoryDepartmentView.as_view(), name=None),
+    path('department/', views.DepartmentView.as_view(), name=None),
 
 ]
 

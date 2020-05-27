@@ -135,6 +135,9 @@ class Department(models.Model):
     factory = models.ForeignKey(Factory, on_delete=models.SET_NULL, null=True, blank=True)
     status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
 
+    class Meta:
+        unique_together = ['factory', 'title',]
+
     def __str__(self):
         return str(self.title)
 

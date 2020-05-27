@@ -37,3 +37,25 @@ class FactoryView(APIView):
             data.save(owner=request.user)
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class DepartmentView(APIView):
+    def post(self, request, format=None):
+        data = DepartmentSerilizer(data=request.data)
+        if data.is_valid():
+            data.save(owner=request.user)
+            return Response(data.data, status=status.HTTP_200_OK)
+        return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class FactoryDepartmentView(APIView):
+    def get(self, request, pk, format=None):
+        data = Department.objects.filter(factory__exact=pk, title__contains=request.GET['item']).all()[:6]
+        serilizer = DepartmentSerilizer(data, many=True)
+        return Response(serilizer.data)
+
+
+
+
