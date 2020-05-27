@@ -59,34 +59,3 @@ class FactoryDepartmentView(APIView):
 
 
 
-class FactoryAreaView(APIView):
-    def get(self, request, pk, format=None):
-        data = Area.objects.filter(factory__exact=pk, title__contains=request.GET['item']).all()[:6]
-        serilizer = AreaSerilizer(data, many=True)
-        return Response(serilizer.data)
-
-
-
-class AreaView(APIView):
-    def post(self, request, format=None):
-        data = AreaSerilizer(data=request.data)
-        if data.is_valid():
-            data.save()
-            return Response(data.data, status=status.HTTP_200_OK)
-        return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class PartAreaView(APIView):
-    def get(self, request, pk, format=None):
-        data = Part.objects.filter(area__exact=pk, title__contains=request.GET['item']).all()[:6]
-        serilizer = PartSerilizer(data, many=True)
-        return Response(serilizer.data)
-
-class PartView(APIView):
-    def post(self, request, format=None):
-        data = PartSerilizer(data=request.data)
-        if data.is_valid():
-            data.save()
-            return Response(data.data, status=status.HTTP_200_OK)
-        return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
-

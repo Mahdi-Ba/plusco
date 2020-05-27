@@ -151,6 +151,8 @@ class Category(models.Model):
 class Area(models.Model):
     title = models.CharField(max_length=255, unique=True)
     factory = models.ForeignKey(Factory, on_delete=models.SET_NULL, null=True, blank=True)
+    class Meta:
+        unique_together = ['factory', 'title',]
 
     def __str__(self):
         return str(self.title)
@@ -158,6 +160,10 @@ class Area(models.Model):
 class Part(models.Model):
     title = models.CharField(max_length=255, unique=True)
     area = models.ForeignKey(Area, on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        unique_together = ['area', 'title',]
+
 
     def __str__(self):
         return str(self.title)

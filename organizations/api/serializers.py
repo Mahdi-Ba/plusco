@@ -34,8 +34,6 @@ class FactorySerilizer(serializers.ModelSerializer):
         data = Factory.objects.create(**validate_data)
         return data
 
-
-
 class DepartmentSerilizer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=True)
     factory_title = serializers.CharField(source='factory.title',read_only=True)
@@ -55,6 +53,49 @@ class DepartmentSerilizer(serializers.ModelSerializer):
     def create(self, validate_data):
         validate_data['factory'] = Factory.objects.get(pk=validate_data['factory'])
         data = Department.objects.create(**validate_data)
+        return data
+
+
+class AreaSerilizer(serializers.ModelSerializer):
+    title = serializers.CharField(max_length=255, required=True)
+    factory_title = serializers.CharField(source='factory.title',read_only=True)
+    factory = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = Area
+        fields = ['id', 'title','factory_title','factory']
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Area.objects.all(),
+                fields=['factory', 'title']
+            )
+        ]
+
+
+    def create(self, validate_data):
+        validate_data['factory'] = Factory.objects.get(pk=validate_data['factory'])
+        data = Area.objects.create(**validate_data)
+        return data
+
+
+class PartSerilizer(serializers.ModelSerializer):
+    title = serializers.CharField(max_length=255, required=True)
+    area = serializers.CharField()
+
+    class Meta:
+        model = Part
+        fields = ['id', 'title','area']
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Part.objects.all(),
+                fields=['area', 'title']
+            )
+        ]
+
+
+    def create(self, validate_data):
+        validate_data['area'] = Area.objects.get(pk=validate_data['area'])
+        data = Part.objects.create(**validate_data)
         return data
 
 
