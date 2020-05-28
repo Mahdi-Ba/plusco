@@ -1,7 +1,7 @@
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import Page, PageSerializer, PageContentSerializer
+from .serializers import Page, PageSerializer, PageContentSerializer,MyFileSerilize
 from rest_framework import status
 
 
@@ -20,3 +20,12 @@ class PageDetail(APIView):
             return Response(serializer.data)
         except Page.DoesNotExist:
             raise Http404
+
+
+class UploadView(APIView):
+    def post(self,request, format=None):
+        data = MyFileSerilize(data=request.data)
+        if data.is_valid():
+            data.save()
+            return Response(data.data, status=status.HTTP_200_OK)
+

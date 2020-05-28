@@ -18,3 +18,8 @@ class Page(models.Model):
         if not self.slug:
             self.slug = slugify(self.title)
         return super().save(*args, **kwargs)
+
+
+
+class MyImage(models.Model):
+    file = models.FileField()
