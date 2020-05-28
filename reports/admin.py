@@ -33,20 +33,17 @@ class ConformityAdmin(admin.ModelAdmin):
     inlines = [ConformityGalleryModel,ActionModel]
 
     list_display = [
-        'title',
+        'text',
         'owner',
         'owner_factory',
         'receiver_factory',
-        'is_publish',
-        'category',
         'part',
     ]
-    search_fields = ['title']
-    list_filter = ['risk', 'is_publish']
+    search_fields = ['owner']
+    list_filter = ['priority', 'is_conformity']
     autocomplete_fields = ['owner',
                            'owner_factory',
                            'receiver_factory',
-                           'category',
                            'part',
                            'status'
                            ]
@@ -64,12 +61,10 @@ class ActionAdmin(admin.ModelAdmin):
         'follower_department',
         'executiv_status',
         'execute_department',
-        'is_publish',
         'due_date',
 
     ]
     search_fields = ['title']
-    list_filter = ['is_publish']
 
     autocomplete_fields = ['owner',
                            'conformity',

@@ -55,6 +55,30 @@ class DepartmentSerilizer(serializers.ModelSerializer):
         data = Department.objects.create(**validate_data)
         return data
 
+class DepartmentMemberSerilizer(serializers.ModelSerializer):
+    user = serializers.CharField(required=False,validators=[UniqueValidator(queryset=UserAuthority.objects.all())])
+    department = serializers.CharField(required=True)
+    position = serializers.CharField(required=False)
+
+    class Meta:
+        model = UserAuthority
+        fields = ['id', 'user', 'department', 'position']
+
+
+    def create(self, validate_data):
+        validate_data['user'] = User.objects.get(id=int(validate_data['user']))
+        validate_data['department'] = Department.objects.get(pk=validate_data['department'])
+        data = UserAuthority.objects.create(**validate_data)
+        return data
+
+    def update(self, instance, validated_data):
+        instance.user = instance.user
+        instance.department =Department.objects.get(pk=validated_data['department'])
+        if validated_data.get('position',False):
+            instance.position = Position.objects.get(pk=validated_data['position'])
+        instance.save()
+        return instance
+
 
 class AreaSerilizer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=True)
@@ -96,6 +120,27 @@ class PartSerilizer(serializers.ModelSerializer):
     def create(self, validate_data):
         validate_data['area'] = Area.objects.get(pk=validate_data['area'])
         data = Part.objects.create(**validate_data)
+        return data
+
+
+class PositionSerilizer(serializers.ModelSerializer):
+    title = serializers.CharField(max_length=255, required=True)
+    department = serializers.CharField()
+
+    class Meta:
+        model = Position
+        fields = ['id', 'title','department']
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Position.objects.all(),
+                fields=['department', 'title']
+            )
+        ]
+
+
+    def create(self, validate_data):
+        validate_data['department'] = Department.objects.get(pk=validate_data['department'])
+        data = Position.objects.create(**validate_data)
         return data
 
 

@@ -169,7 +169,7 @@ class Part(models.Model):
         return str(self.title)
 
 class Position(models.Model):
-    title = models.CharField(max_length=255, unique=True)
+    title = models.CharField(max_length=255,)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):

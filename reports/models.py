@@ -15,21 +15,22 @@ class Status(models.Model):
 
 
 class Conformity(models.Model):
-    is_publish = models.BooleanField(default=True)
-    publisher = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,related_name='publisher')
+    # is_publish = models.BooleanField(default=True)
+    # publisher = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,related_name='publisher')
+    # category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
     status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     owner_factory = models.ForeignKey(Factory, on_delete=models.SET_NULL, null=True, blank=True,related_name='owner_factory')
     receiver_factory = models.ForeignKey(Factory, on_delete=models.SET_NULL, null=True, blank=True)
     title = models.CharField(max_length=255, blank=True, null=True)
     text = models.TextField(blank=True, null=True)
-    risk = models.IntegerField(blank=True, null=True)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True)
+    priority = models.IntegerField(blank=True, null=True)
     part = models.ForeignKey(Part, on_delete=models.SET_NULL, null=True, blank=True)
+    is_conformity = models.BooleanField(default=False)
 
 
     def __str__(self):
-        return self.title
+        return self.text
 
 
 
@@ -47,8 +48,8 @@ class ActionStatus(models.Model):
         return self.title
 
 class Action(models.Model):
-    is_publish = models.BooleanField(default=True)
-    publisher = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    # is_publish = models.BooleanField(default=True)
+    # publisher = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     followe_status = models.ForeignKey(ActionStatus, on_delete=models.SET_NULL, null=True, blank=True,related_name='follower_status')
     follower_department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True,related_name='follower_dep')
     execute_owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,related_name='execute_owner')
