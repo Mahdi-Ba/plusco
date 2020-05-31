@@ -1,6 +1,6 @@
 from django.utils.text import slugify
 from rest_framework import serializers
-from ..models import Page,MyImage
+from ..models import Page
 from django.urls import reverse
 
 
@@ -21,8 +21,8 @@ class PageContentSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'content', 'slug', 'created']
 
 
-class MyFileSerilize(serializers.ModelSerializer):
-    file = serializers.FileField()
-    class Meta:
-        model = MyImage
-        fields = ['file',]
+# class MyFileSerilize(serializers.ModelSerializer):
+#     file = serializers.FileField()
+#     class Meta:
+#         model = MyImage
+#         fields = ['file',]

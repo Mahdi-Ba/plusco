@@ -21,5 +21,5 @@ class Page(models.Model):
 
 
 
-class MyImage(models.Model):
-    file = models.FileField()
+# class MyImage(models.Model):
+#     file = models.FileField()
