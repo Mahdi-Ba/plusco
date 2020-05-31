@@ -35,7 +35,7 @@ class Conformity(models.Model):
 
 
 class ConformityGallery(models.Model):
-    conformity = models.ForeignKey(Conformity, on_delete=models.SET_NULL, null=True, blank=True)
+    conformity = models.ForeignKey(Conformity, on_delete=models.CASCADE, null=True, blank=True,related_name='conformity_gallery')
     file = models.FileField(upload_to='conformity/', null=True, blank=True)
 
 
@@ -50,23 +50,24 @@ class ActionStatus(models.Model):
 class Action(models.Model):
     # is_publish = models.BooleanField(default=True)
     # publisher = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    followe_status = models.ForeignKey(ActionStatus, on_delete=models.SET_NULL, null=True, blank=True,related_name='follower_status')
-    follower_department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True,related_name='follower_dep')
+    # followe_status = models.ForeignKey(ActionStatus, on_delete=models.SET_NULL, null=True, blank=True,related_name='follower_status')
+    # follower_department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True,related_name='follower_dep')
+    # follower_owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,related_name='follower_owner')
+    status = models.ForeignKey(ActionStatus, on_delete=models.SET_NULL, null=True, blank=True,related_name='executive_status')
     execute_owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,related_name='execute_owner')
-    executiv_status = models.ForeignKey(ActionStatus, on_delete=models.SET_NULL, null=True, blank=True,related_name='executive_status')
     execute_department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True,related_name='execute_dep')
-    follower_owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,related_name='follower_owner')
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,related_name='action_owner')
     owner_factory = models.ForeignKey(Factory, on_delete=models.SET_NULL, null=True, blank=True)
-    conformity = models.ForeignKey(Conformity, on_delete=models.SET_NULL, null=True, blank=True)
+    conformity = models.ForeignKey(Conformity, on_delete=models.CASCADE, null=True, blank=True,related_name='action')
     title = models.CharField(max_length=255, blank=True, null=True)
     text = models.TextField(blank=True, null=True)
-    due_date = models.DateTimeField(null=True,blank=True)
+    reply_text = models.TextField(blank=True, null=True)
+    due_date = models.DateField(null=True,blank=True)
     def __str__(self):
         return self.title
 
 class ActionGallery(models.Model):
-    action = models.ForeignKey(Action, on_delete=models.SET_NULL, null=True, blank=True)
+    action = models.ForeignKey(Action, on_delete=models.CASCADE, null=True, blank=True,related_name='action_gallery')
     file = models.FileField(upload_to='action/', null=True, blank=True)
 
 

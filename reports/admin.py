@@ -57,9 +57,9 @@ class ActionAdmin(admin.ModelAdmin):
         'conformity',
         'owner',
         'owner_factory',
-        'followe_status',
-        'follower_department',
-        'executiv_status',
+        # 'followe_status',
+        # 'follower_department',
+        # 'executiv_status',
         'execute_department',
         'due_date',
 
@@ -69,12 +69,12 @@ class ActionAdmin(admin.ModelAdmin):
     autocomplete_fields = ['owner',
                            'conformity',
                            'owner_factory',
-                           'follower_department',
+                           # 'follower_department',
                            'execute_department',
-                           'followe_status',
-                           'executiv_status',
+                           # 'followe_status',
+                           # 'executiv_status',
                            'execute_owner',
-                           'follower_owner',
+                           # 'follower_owner',
 
                            ]
 
