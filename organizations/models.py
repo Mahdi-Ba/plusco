@@ -200,7 +200,7 @@ class AdminGroup(models.Model):
 
 
 class AdminUser(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     admin_group = models.ForeignKey(AdminGroup, on_delete=models.SET_NULL, null=True, blank=True)
     status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
 

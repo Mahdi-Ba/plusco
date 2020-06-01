@@ -17,6 +17,8 @@ urlpatterns = [
     path('area/<int:pk>/part', views.PartAreaView.as_view(), name=None),
     path('part/', views.PartView.as_view(), name=None),
     path('position/', views.PositionView.as_view(), name=None),
+    path('relation/type', views.RelationTypeView.as_view(), name=None),
+    path('relation/', views.RelationView.as_view(), name=None),
 
 ]
 

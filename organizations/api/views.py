@@ -34,7 +34,9 @@ class FactoryView(APIView):
     def post(self, request, format=None):
         data = FactorySerilizer(data=request.data)
         if data.is_valid():
-            data.save(owner=request.user)
+            factory = data.save(owner=request.user)
+            admin_group = AdminGroup.objects.create(owner=request.user,factory=factory)
+            AdminUser.objects.create(user=request.user,admin_group=admin_group)
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -106,6 +108,20 @@ class PartAreaView(APIView):
         data = Part.objects.filter(area__exact=pk, title__contains=request.GET['item']).all()[:6]
         serilizer = PartSerilizer(data, many=True)
         return Response(serilizer.data)
+
+class RelationTypeView(APIView):
+    def get(self, request, format=None):
+        data = RelationType.objects.all()
+        serilizer = RelationTypeSerilizer(data, many=True)
+        return Response(serilizer.data)
+
+
+class RelationView(APIView):
+    def get(self, request,format=None):
+        pass
+
+    def post(self, request,format=None):
+        pass
 
 
 class PartView(APIView):

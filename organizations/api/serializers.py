@@ -144,3 +144,8 @@ class PositionSerilizer(serializers.ModelSerializer):
         return data
 
 
+
+class RelationTypeSerilizer(serializers.ModelSerializer):
+    class Meta:
+        model = RelationType
+        fields = ['title', 'order']
