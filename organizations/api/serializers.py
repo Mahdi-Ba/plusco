@@ -144,7 +144,7 @@ class PositionSerilizer(serializers.ModelSerializer):
 class RelationTypeSerilizer(serializers.ModelSerializer):
     class Meta:
         model = RelationType
-        fields = ['id','title', 'order']
+        fields = ['id','title',]
 
 
 class RelationSerilizer(serializers.ModelSerializer):

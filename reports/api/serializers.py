@@ -27,7 +27,7 @@ class ActionGallerySerilizer(serializers.ModelSerializer):
 class StatusSerilizer(serializers.ModelSerializer):
     class Meta:
         model = Status
-        fields = ['id','title', 'order']
+        fields = ['id','title']
 
 
 class ActionSerilizer(serializers.ModelSerializer):
@@ -66,7 +66,7 @@ class ActionSerilizer(serializers.ModelSerializer):
         validate_data['execute_department'] = Department.objects.get(pk=validate_data['execute_department'])
         validate_data['conformity'] = Conformity.objects.get(pk=validate_data['conformity'])
         if validate_data.get('status', False):
-            validate_data['status'] = Status.objects.get(order=validate_data['status'])
+            validate_data['status'] = Status.objects.get(pk=validate_data['status'])
         data = Action.objects.create(**validate_data)
         return data
 
@@ -107,6 +107,6 @@ class ConformitySerilizer(serializers.ModelSerializer):
         if validate_data.get('part', False):
             validate_data['part'] = Part.objects.get(pk=validate_data['part'])
         if validate_data.get('status', False):
-            validate_data['status'] = Status.objects.get(order=validate_data['status'])
+            validate_data['status'] = Status.objects.get(pk=validate_data['status'])
         data = Conformity.objects.create(**validate_data)
         return data
