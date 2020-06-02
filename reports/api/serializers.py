@@ -27,7 +27,7 @@ class ActionGallerySerilizer(serializers.ModelSerializer):
 class StatusSerilizer(serializers.ModelSerializer):
     class Meta:
         model = Status
-        fields = ['title', 'order']
+        fields = ['id','title', 'order']
 
 
 class ActionSerilizer(serializers.ModelSerializer):
