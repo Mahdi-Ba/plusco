@@ -127,6 +127,9 @@ class Relation(models.Model):
     target = models.ForeignKey(Factory,related_name='target',on_delete=models.SET_NULL,null=True)
     type = models.ForeignKey(RelationType,on_delete=models.SET_NULL,null=True)
 
+    class Meta:
+        unique_together = ['source', 'target', ]
+
 
 class Department(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
@@ -201,8 +204,11 @@ class AdminGroup(models.Model):
 
 class AdminUser(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    admin_group = models.ForeignKey(AdminGroup, on_delete=models.SET_NULL, null=True, blank=True)
+    admin_group = models.ForeignKey(AdminGroup, on_delete=models.SET_NULL, null=True, blank=True,related_name='admin_user')
     status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        unique_together = ['user', 'admin_group', ]
 
     def __str__(self):
         return str(self.user.mobile)
