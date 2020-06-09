@@ -11,10 +11,11 @@ class UserSerializer(serializers.ModelSerializer):
     mobile = serializers.CharField(read_only=False, required=False)
     file = serializers.ImageField(required=False, allow_null=True)
     expire_pass = serializers.BooleanField(required=False)
+    trusted = serializers.BooleanField(required=False)
 
     class Meta:
         model = User
-        fields = ['mobile', 'first_name', 'last_name', 'national_code', 'password', 'expire_pass', 'birth_date', 'file']
+        fields = ['mobile', 'first_name', 'last_name', 'national_code', 'password', 'expire_pass', 'birth_date', 'file','trusted']
 
     def create(self, validated_data):
         user = super(UserSerializer, self).create(validated_data)
