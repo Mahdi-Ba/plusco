@@ -60,7 +60,8 @@ urlpatterns = [
     path('v1/users/', include('users.urls')),
     path('v1/pages/', include('pages.urls')),
     path('v1/structure/',include('organizations.urls')),
-    path('v1/reports/',include('reports.urls'))
+    path('v1/reports/',include('reports.urls')),
+    path('v1/fcm/', include('pluscofcm.urls')),
 
 ]
 

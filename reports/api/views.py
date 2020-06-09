@@ -5,14 +5,20 @@ from django.core.files.base import ContentFile
 from django.db.models import Q
 from django.http import Http404
 from rest_framework.decorators import permission_classes
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
+from django.db.models import Q
 from organizations.models import UserAuthority
+from plusco.pagination import PaginationHandlerMixin
 from .serializers import *
 from rest_framework import status
 from ..models import *
+
+
+class BasicPagination(PageNumberPagination):
+    page_size_query_param = 'limit'
 
 class StatusConformityView(APIView):
     def get(self, request, format=None):
@@ -25,6 +31,40 @@ class StatusActionView(APIView):
         data = ActionStatus.objects.all()
         serilizer = StatusSerilizer(data, many=True)
         return Response(serilizer.data)
+
+class ConformityFactoryBoardView(APIView,PaginationHandlerMixin):
+    pagination_class = BasicPagination
+
+    def get(self, request, format=None):
+        authority = UserAuthority.objects.get(user=request.user).department.factory
+        conformity = Conformity.objects.filter(receiver_factory=authority).order_by('-id')
+        page = self.paginate_queryset(conformity)
+        if page is not None:
+            serializer = self.get_paginated_response(ConformityBriefSerilizer(page,many=True).data)
+
+        else:
+            serializer = ConformityBriefSerilizer(conformity, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ConformityMyBoardView(APIView,PaginationHandlerMixin):
+    pagination_class = BasicPagination
+
+    def get(self, request, format=None):
+        ids = Conformity.objects.filter(owner=request.user).values_list('id',flat=True)
+        conformity_id = Action.objects.filter(execute_owner=request.user).order_by('-id').values_list('conformity__id',flat=True).distinct()
+        finall = list(ids) + list(conformity_id)
+        finall = sorted(set(finall))
+        conformity = Conformity.objects.filter(id__in=finall).order_by('-id')
+        page = self.paginate_queryset(conformity)
+        if page is not None:
+            serializer = self.get_paginated_response(ConformitySerilizer(page,many=True).data)
+
+        else:
+            serializer = ConformitySerilizer(conformity, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class ConformityView(APIView):
     def post(self, request, format=None):

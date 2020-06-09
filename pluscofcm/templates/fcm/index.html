@@ -1,0 +1,57 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} delete-confirmation{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label='pluscofcm' %}">{% trans "Notification" %}</a>
+&rsaquo; <a href="{% url 'admin:pluscofcm_user_changelist' %}">{% trans "user" %}</a>
+&rsaquo; <span>Send message</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<form action="" method="post" >
+    {% csrf_token %}
+  <input type="hidden" name="action" value="gardeshMessage" />
+    <div>
+        <div>
+            <p>Title</p>
+            <input style="width: 370px" type="text" placeholder="{% blocktrans %}Write your title here{% endblocktrans %}" name="title" id="">
+        </div>
+        <br>
+        <div>
+            <p>Message</p>
+            <textarea name="message" placeholder="{% blocktrans %}Write your message here{% endblocktrans %}" id="message" cols="50" rows="10"></textarea>
+        </div>
+        <br>
+        <div>
+<!--            <p>-->
+<!--                {% for item in form %}-->
+<!--                    {{ user.first_name }}{% if not forloop.last %},&nbsp;{% endif %}-->
+<!--                {% endfor %}-->
+<!--            </p>-->
+
+            <select style="display: none" name="{{ action_checkbox_name }}" multiple >
+                {% for item in form %}
+                    <option value="{{ item.id }}" selected>{{ item.first_name }} {{ item.last_name }} </option>
+                {% endfor %}
+            </select>
+        </div>
+        <select name="type">
+            <option value="all" selected>all</option>
+            <option value="android">android</option>
+            <option value="ios">ios</option>
+            <option value="web">web</option>
+        </select>
+
+
+        <br>
+        <input type="submit" name="apply" value="{% trans 'Send message' %}" />
+        <a href="{% url 'admin:pluscofcm_user_changelist' %}" class="button cancel-link">{% trans "No, take me back" %}</a>
+    </div>
+</form>
+{% endblock %}

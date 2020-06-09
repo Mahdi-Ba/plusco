@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'organizations',
     'reports',
     "fcm_django",
+    'pluscofcm.apps.PluscofcmConfig',
     "pages",
 
     # 'rest_framework_swagger',

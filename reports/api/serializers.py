@@ -110,3 +110,33 @@ class ConformitySerilizer(serializers.ModelSerializer):
             validate_data['status'] = Status.objects.get(pk=validate_data['status'])
         data = Conformity.objects.create(**validate_data)
         return data
+
+
+
+class ConformityBriefSerilizer(serializers.ModelSerializer):
+    title = serializers.CharField(max_length=255, required=False)
+    owner = serializers.ReadOnlyField(source='owner.mobile')
+    owner_factory = FactorySerilizer(required=False, many=False)
+    receiver_factory = serializers.CharField(write_only=True)
+    receiver_factory_detail = FactorySerilizer(required=False, many=False, source='receiver_factory')
+    text = serializers.CharField()
+    priority = serializers.IntegerField()
+    part = serializers.CharField(write_only=True)
+    status = serializers.CharField(required=False)
+    part_detail = PartSerilizer(required=False, source='part')
+    is_conformity = serializers.BooleanField()
+    conformity_gallery = ConformityGallerySerilizer(read_only=True, many=True)
+
+
+    class Meta:
+        model = Conformity
+        fields = ['id',
+                  'title',
+                  'text',
+                  'owner',
+                  'owner_factory',
+                  'receiver_factory',
+                  'receiver_factory_detail',
+                  'priority',
+                  'part',
+                  'is_conformity', 'part_detail', 'conformity_gallery', 'status']

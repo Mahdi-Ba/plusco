@@ -10,6 +10,8 @@ urlpatterns = [
     # path('test', views.UploadView.as_view()),
     path('conformity/status/', views.StatusConformityView.as_view()),
     path('conformity/', views.ConformityView.as_view()),
+    path('conformity/factory/board', views.ConformityFactoryBoardView.as_view()),
+    path('conformity/my/board', views.ConformityMyBoardView.as_view()),
     path('conformity/detail/<int:pk>', views.ConformityDetailView.as_view()),
     path('action/status/', views.StatusActionView.as_view()),
     path('action/', views.ActionView.as_view()),
