@@ -1,26 +1,20 @@
 from ..models import User
-from  rest_framework import serializers
+from rest_framework import serializers
+
 
 class UserSerializer(serializers.ModelSerializer):
-    full_name = serializers.SerializerMethodField('get_fullname')
     password = serializers.CharField(write_only=True, required=False)
     first_name = serializers.CharField(max_length=200, required=False)
     last_name = serializers.CharField(max_length=200, required=False)
-    national_code = serializers.CharField(max_length=200, required=False)
-    birth_date = serializers.DateField(required=False)
+    national_code = serializers.CharField(max_length=200, required=False,allow_blank=True)
+    birth_date = serializers.CharField(required=False)
     mobile = serializers.CharField(read_only=False, required=False)
-    file = serializers.ImageField(required=False)
-    email = serializers.EmailField(required=False)
-    # attrs = serializers.JSONField(required=False)
+    file = serializers.ImageField(required=False, allow_null=True)
+    expire_pass = serializers.BooleanField(required=False)
 
-    
     class Meta:
         model = User
-        fields = ['mobile', 'first_name', 'last_name', 'full_name', 'national_code', 'password', 'birth_date','file','email']
-        # fields = '__all__'
-
-    def get_fullname(self, instance):
-        return instance.first_name + ' ' + instance.last_name
+        fields = ['mobile', 'first_name', 'last_name', 'national_code', 'password', 'expire_pass', 'birth_date', 'file']
 
     def create(self, validated_data):
         user = super(UserSerializer, self).create(validated_data)
@@ -29,12 +23,10 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
-        instance.first_name = validated_data.get('first_name', instance.first_name) if validated_data.get('first_name') is not None else instance.first_name
-        instance.last_name = validated_data.get('last_name', instance.last_name) if validated_data.get('last_name') is not None else instance.last_name
-        instance.national_code = validated_data.get('national_code', instance.national_code) if validated_data.get('national_code') is not None else instance.national_code
-        instance.birth_date = validated_data.get('birth_date', instance.birth_date) if validated_data.get('birth_date') is not None else instance.birth_date
-        instance.file = validated_data.get('file', instance.file) if validated_data.get('file') is not None else instance.file
-        instance.email = validated_data.get('email', instance.email) if validated_data.get('email') is not None else instance.email
-        # instance.attrs = validated_data.get('attrs', instance.attrs)
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.national_code = validated_data.get('national_code', instance.national_code)
+        instance.birth_date = validated_data.get('birth_date', instance.birth_date)
+        instance.file = validated_data.get('file', instance.file)
         instance.save()
         return instance

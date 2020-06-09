@@ -51,19 +51,18 @@ class ConformityMyBoardView(APIView,PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     def get(self, request, format=None):
-        ids = Conformity.objects.filter(owner=request.user).values_list('id',flat=True)
-        conformity_id = Action.objects.filter(execute_owner=request.user).order_by('-id').values_list('conformity__id',flat=True).distinct()
-        finall = list(ids) + list(conformity_id)
-        finall = sorted(set(finall))
-        conformity = Conformity.objects.filter(id__in=finall).order_by('-id')
+        conformity = Conformity.objects.filter(owner=request.user).order_by('-id')
         page = self.paginate_queryset(conformity)
         if page is not None:
-            serializer = self.get_paginated_response(ConformitySerilizer(page,many=True).data)
+            serializer = self.get_paginated_response(ConformityBriefSerilizer(page,many=True).data)
 
         else:
-            serializer = ConformitySerilizer(conformity, many=True)
+            serializer = ConformityBriefSerilizer(conformity, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
 
 
 class ConformityView(APIView):
@@ -115,7 +114,19 @@ class RejectActionView(APIView):
         serilizer = ActionSerilizer(data, many=False)
         return Response(serilizer.data)
 
+class ActionMyBoardView(APIView,PaginationHandlerMixin):
+    pagination_class = BasicPagination
 
+    def get(self, request, format=None):
+        action = Action.objects.filter(execute_owner=request.user).order_by('-id')
+        page = self.paginate_queryset(action)
+        if page is not None:
+            serializer = self.get_paginated_response(ActionSerilizer(page,many=True).data)
+
+        else:
+            serializer = ActionSerilizer(action, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 class ActionView(APIView):
     def post(self, request, format=None):
         action = ActionSerilizer(data=request.data)

@@ -5,15 +5,14 @@ from rest_framework.authtoken.views import obtain_auth_token
 from rest_framework_jwt.views import obtain_jwt_token
 
 
+
 urlpatterns = [
-    # path('info/', views.UserListView.as_view(), name=None),
     path('passwd/', views.NewPasswd.as_view(), name=None),
     path('set-passwd/', views.SetPasswd.as_view(), name=None),
-    path('forget-passwd/', views.NewPasswd.as_view(), name=None),
     path('which-passwd/', views.WhichPasswd.as_view(), name=None),
     path('user-info/', views.userInfo.as_view(), name=None),
+    path('contacts-check/', views.ContactsCheck.as_view(), name=None),
     path('api-token-auth/', views.CustomAuthToken.as_view(), name='api_token_auth'),
-    # path('create/', views.UserCreateAPIView.as_view(), name='create'),
     path('update/', views.UserDetail.as_view(), name='update'),
     path('detail/<int:pk>/', views.UserDetail.as_view()),
 ]

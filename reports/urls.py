@@ -19,6 +19,7 @@ urlpatterns = [
     path('action/detail/<int:pk>', views.ActionDetailView.as_view()),
     path('action/catch/', views.CatchActionView.as_view()),
     path('action/reject/', views.RejectActionView.as_view()),
+    path('action/my/board', views.ActionMyBoardView.as_view()),
 
 ]
 
