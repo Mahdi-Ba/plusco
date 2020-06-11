@@ -156,7 +156,8 @@ class RelationView(APIView):
         request.data['source'] = str(authority.department.factory.id)
         data = RelationSerilizer(data=request.data)
         if data.is_valid():
-            data.save(owner=request.user)
+            instance = data.save(owner=request.user)
+            Relation.objects.create(source=instance.target,target=instance.source,type=RelationType.objects.get(id=request.data['type']).opposite_title)
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 

@@ -51,12 +51,12 @@ class OrganizationAdmin(admin.ModelAdmin):
 
 @admin.register(RelationType)
 class RelationTypeAdmin(admin.ModelAdmin):
-    list_display = ['title', 'user', 'order']
-    search_fields = ['title']
+    list_display = ['title', 'user', 'order','opposite_title']
+    search_fields = ['title','opposite_title']
 
 
 @admin.register(Relation)
-class RelationTypeAdmin(admin.ModelAdmin):
+class RelationAdmin(admin.ModelAdmin):
     list_display = ['user', 'owner', 'source', 'target', 'type']
     search_fields = ['user', ]
 
