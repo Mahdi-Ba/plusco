@@ -13,7 +13,7 @@ from ..models import *
 
 class OrganizationView(APIView):
     def get(self, request, format=None):
-        data = Organization.objects.filter(title__contains=request.GET['item']).all()[:6]
+        data = Organization.objects.filter(title__contains=request.GET['item']).all()
         serilizer = OrgSerilizer(data, many=True)
         return Response(serilizer.data)
 
@@ -27,7 +27,7 @@ class OrganizationView(APIView):
 
 class OrgFactoryView(APIView):
     def get(self, request, pk, format=None):
-        data = Factory.objects.filter(organization__exact=pk, title__contains=request.GET['item']).all()[:6]
+        data = Factory.objects.filter(organization__exact=pk, title__contains=request.GET['item']).all()
         serilizer = FactorySerilizer(data, many=True)
         return Response(serilizer.data)
 
@@ -84,14 +84,14 @@ class DepartmentMemberView(APIView):
 
 class FactoryDepartmentView(APIView):
     def get(self, request, pk, format=None):
-        data = Department.objects.filter(factory__exact=pk, title__contains=request.GET['item']).all()[:6]
+        data = Department.objects.filter(factory__exact=pk, title__contains=request.GET['item']).all()
         serilizer = DepartmentSerilizer(data, many=True)
         return Response(serilizer.data)
 
 
 class FactoryAreaView(APIView):
     def get(self, request, pk, format=None):
-        data = Area.objects.filter(factory__exact=pk, title__contains=request.GET['item']).all()[:6]
+        data = Area.objects.filter(factory__exact=pk, title__contains=request.GET['item']).all()
         serilizer = AreaSerilizer(data, many=True)
         return Response(serilizer.data)
 
@@ -107,7 +107,7 @@ class AreaView(APIView):
 
 class PartAreaView(APIView):
     def get(self, request, pk, format=None):
-        data = Part.objects.filter(area__exact=pk, title__contains=request.GET['item']).all()[:6]
+        data = Part.objects.filter(area__exact=pk, title__contains=request.GET['item']).all()
         serilizer = PartSerilizer(data, many=True)
         return Response(serilizer.data)
 
