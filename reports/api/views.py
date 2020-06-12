@@ -139,8 +139,11 @@ class ActionView(APIView):
 
 class ActionReplyView(APIView):
     def post(self, request, format=None):
-        files = request.data.pop('files')
         action_nomber = request.data.pop('action')
+        if Action.objects.get(pk=action_nomber).execute_owner != request.user:
+            return Response({"status":False,'message':"دسترسی ندارید"},status=status.HTTP_403_FORBIDDEN)
+
+        files = request.data.pop('files')
         action = ActionSerilizer(Action.objects.get(pk=action_nomber),data=request.data)
         if action.is_valid():
             action_obj = action.save()
