@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 # from organizations.api.serializers import PartSerilizer
 from organizations.api.serializers import PartSerilizer, FactorySerilizer
+from users.api.serializers import BriefUser
 from ..models import *
 from django.urls import reverse
 
@@ -23,18 +24,19 @@ class ActionGallerySerilizer(serializers.ModelSerializer):
         fields = ['file']
 
 
-
 class StatusSerilizer(serializers.ModelSerializer):
     class Meta:
         model = Status
-        fields = ['id','title']
+        fields = ['id', 'title']
 
 
 class ActionSerilizer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(required=False, source='owner.mobile')
+    owner_detail = BriefUser(many=False, required=False, read_only=True, source='owner')
     owner_factory = FactorySerilizer(required=False, many=False)
     execute_department = serializers.CharField(required=False)
-    execute_owner = serializers.ReadOnlyField(required=False, source='execute_owner.mobile',allow_null=True)
+    execute_owner = serializers.ReadOnlyField(required=False, source='execute_owner.mobile', allow_null=True)
+    execute_owner_detail = BriefUser(many=False, required=False, read_only=True, source='execute_owner')
     conformity = serializers.CharField(required=False)
     conformity_id = serializers.IntegerField(source='conformity.id', read_only=True)
     title = serializers.CharField(max_length=255, required=False)
@@ -43,24 +45,24 @@ class ActionSerilizer(serializers.ModelSerializer):
     due_date = serializers.DateField(required=False, format="%s")
     action_gallery = ActionGallerySerilizer(read_only=True, many=True)
 
-
     class Meta:
         model = Action
         fields = [
-                  'id',
-                  'execute_owner',
-                  'execute_department',
-                  'owner',
-                  'owner_factory',
-                  'conformity',
-                  'title',
-                  'text',
-                  'reply_text',
-                  'due_date',
-                  'conformity',
-                  'conformity_id',
-                  'action_gallery',
-                  ]
+            'id',
+            'execute_owner',
+            'execute_department',
+            'owner',
+            'owner_factory',
+            'conformity',
+            'title',
+            'text',
+            'reply_text',
+            'due_date',
+            'conformity',
+            'conformity_id',
+            'action_gallery',
+            'owner_detail', 'execute_owner_detail'
+        ]
 
     def create(self, validate_data):
         validate_data['execute_department'] = Department.objects.get(pk=validate_data['execute_department'])
@@ -71,12 +73,10 @@ class ActionSerilizer(serializers.ModelSerializer):
         return data
 
 
-
-
-
 class ConformitySerilizer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=False)
     owner = serializers.ReadOnlyField(source='owner.mobile')
+    owner_detail = BriefUser(many=False,required=False,read_only=True,source='owner')
     owner_factory = FactorySerilizer(required=False, many=False)
     receiver_factory = serializers.CharField(write_only=True)
     receiver_factory_detail = FactorySerilizer(required=False, many=False, source='receiver_factory')
@@ -88,9 +88,8 @@ class ConformitySerilizer(serializers.ModelSerializer):
     is_conformity = serializers.BooleanField()
     conformity_gallery = ConformityGallerySerilizer(read_only=True, many=True)
     action = ActionSerilizer(read_only=True, many=True)
-    date = serializers.DateField(required=False, format="%s",read_only=True)
+    date = serializers.DateField(required=False, format="%s", read_only=True)
     action_count = serializers.SerializerMethodField()
-
 
     class Meta:
         model = Conformity
@@ -103,9 +102,9 @@ class ConformitySerilizer(serializers.ModelSerializer):
                   'receiver_factory_detail',
                   'priority',
                   'part',
-                  'is_conformity', 'part_detail', 'conformity_gallery', 'action', 'status','date','action_count']
+                  'is_conformity', 'part_detail', 'conformity_gallery', 'action', 'status', 'date', 'action_count','owner_detail']
 
-    def get_action_count(self,obj):
+    def get_action_count(self, obj):
         return Action.objects.filter(conformity=obj).count()
 
     def create(self, validate_data):
@@ -118,10 +117,10 @@ class ConformitySerilizer(serializers.ModelSerializer):
         return data
 
 
-
 class ConformityBriefSerilizer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=False)
     owner = serializers.ReadOnlyField(source='owner.mobile')
+    owner_detail = BriefUser(many=False,required=False,read_only=True,source='owner')
     owner_factory = FactorySerilizer(required=False, many=False)
     receiver_factory = serializers.CharField(write_only=True)
     receiver_factory_detail = FactorySerilizer(required=False, many=False, source='receiver_factory')
@@ -132,10 +131,8 @@ class ConformityBriefSerilizer(serializers.ModelSerializer):
     part_detail = PartSerilizer(required=False, source='part')
     is_conformity = serializers.BooleanField()
     conformity_gallery = ConformityGallerySerilizer(read_only=True, many=True)
-    date = serializers.DateField(required=False, format="%s",read_only=True)
+    date = serializers.DateField(required=False, format="%s", read_only=True)
     action_count = serializers.SerializerMethodField()
-
-
 
     class Meta:
         model = Conformity
@@ -148,7 +145,7 @@ class ConformityBriefSerilizer(serializers.ModelSerializer):
                   'receiver_factory_detail',
                   'priority',
                   'part',
-                  'is_conformity', 'part_detail', 'conformity_gallery', 'status','date','action_count']
+                  'is_conformity', 'part_detail', 'conformity_gallery', 'status', 'date', 'action_count','owner_detail']
 
-    def get_action_count(self,obj):
+    def get_action_count(self, obj):
         return Action.objects.filter(conformity=obj).count()

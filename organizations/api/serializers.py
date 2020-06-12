@@ -2,6 +2,7 @@ from django.utils.text import slugify
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 
+from users.api.serializers import BriefUser
 from ..models import *
 from django.urls import reverse
 
@@ -165,6 +166,7 @@ class RelationSerilizer(serializers.ModelSerializer):
             )
         ]
 
+
     def create(self, validate_data):
         validate_data['source'] = Factory.objects.get(pk=int(validate_data['source']))
         validate_data['target'] = Factory.objects.get(pk=validate_data['target'])
@@ -174,17 +176,20 @@ class RelationSerilizer(serializers.ModelSerializer):
 
 class AdminUserSerilizer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.mobile')
+    user_detail = BriefUser(many=False,required=False,read_only=True,source='user')
+
     class Meta:
         model = AdminUser
-        fields = ['user', ]
+        fields = ['user','user_detail' ]
 
 
 class AdminGroupSerilizer(serializers.ModelSerializer):
+    owner_detail = BriefUser(many=False,required=False,read_only=True,source='owner')
     owner = serializers.ReadOnlyField(source='owner.mobile')
     admin_user = AdminUserSerilizer(read_only=True, many=True)
 
 
     class Meta:
         model = AdminGroup
-        fields = ['owner','admin_user',]
+        fields = ['owner','admin_user','owner_detail']
 

@@ -31,3 +31,9 @@ class UserSerializer(serializers.ModelSerializer):
         instance.file = validated_data.get('file', instance.file)
         instance.save()
         return instance
+
+
+class BriefUser(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['mobile', 'first_name', 'last_name',]
