@@ -27,6 +27,7 @@ class Conformity(models.Model):
     priority = models.IntegerField(blank=True, null=True)
     part = models.ForeignKey(Part, on_delete=models.SET_NULL, null=True, blank=True)
     is_conformity = models.BooleanField(default=False)
+    date = models.DateField(blank=True, null=True, auto_now_add=True)
 
 
     def __str__(self):

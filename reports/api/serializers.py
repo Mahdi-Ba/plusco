@@ -88,6 +88,9 @@ class ConformitySerilizer(serializers.ModelSerializer):
     is_conformity = serializers.BooleanField()
     conformity_gallery = ConformityGallerySerilizer(read_only=True, many=True)
     action = ActionSerilizer(read_only=True, many=True)
+    date = serializers.DateField(required=False, format="%s",read_only=True)
+    action_count = serializers.SerializerMethodField()
+
 
     class Meta:
         model = Conformity
@@ -100,7 +103,10 @@ class ConformitySerilizer(serializers.ModelSerializer):
                   'receiver_factory_detail',
                   'priority',
                   'part',
-                  'is_conformity', 'part_detail', 'conformity_gallery', 'action', 'status']
+                  'is_conformity', 'part_detail', 'conformity_gallery', 'action', 'status','date','action_count']
+
+    def get_action_count(self,obj):
+        return Action.objects.filter(conformity=obj).count()
 
     def create(self, validate_data):
         validate_data['receiver_factory'] = Factory.objects.get(pk=validate_data['receiver_factory'])
@@ -126,6 +132,9 @@ class ConformityBriefSerilizer(serializers.ModelSerializer):
     part_detail = PartSerilizer(required=False, source='part')
     is_conformity = serializers.BooleanField()
     conformity_gallery = ConformityGallerySerilizer(read_only=True, many=True)
+    date = serializers.DateField(required=False, format="%s",read_only=True)
+    action_count = serializers.SerializerMethodField()
+
 
 
     class Meta:
@@ -139,4 +148,7 @@ class ConformityBriefSerilizer(serializers.ModelSerializer):
                   'receiver_factory_detail',
                   'priority',
                   'part',
-                  'is_conformity', 'part_detail', 'conformity_gallery', 'status']
+                  'is_conformity', 'part_detail', 'conformity_gallery', 'status','date','action_count']
+
+    def get_action_count(self,obj):
+        return Action.objects.filter(conformity=obj).count()
