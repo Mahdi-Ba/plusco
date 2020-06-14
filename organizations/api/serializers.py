@@ -22,7 +22,7 @@ class FactorySerilizer(serializers.ModelSerializer):
 
     class Meta:
         model = Factory
-        fields = ['id', 'title', 'organization']
+        fields = ['id', 'title', 'organization','image']
         validators = [
             UniqueTogetherValidator(
                 queryset=Factory.objects.all(),
