@@ -42,6 +42,12 @@ class FactoryView(APIView):
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def get(self, request, format=None):
+        data = Factory.objects.all()
+        serilizer = FactorySerilizer(data, many=True)
+        return Response(serilizer.data)
+
+
 
 class DepartmentView(APIView):
     def post(self, request, format=None):
@@ -52,12 +58,19 @@ class DepartmentView(APIView):
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+
+
 class DepartmentPositioView(APIView):
     def get(self, request, pk, format=None):
         data = Position.objects.filter(department__exact=pk).all()
         serilizer = PositionSerilizer(data, many=True)
         return Response(serilizer.data)
 
+class StatusView(APIView):
+    def get(self, request, format=None):
+        data = Status.objects.all()
+        serilizer = StatusSerilizer(data, many=True)
+        return Response(serilizer.data)
 
 class DepartmentMemberView(APIView):
     def get(self, request, format=None):
@@ -66,20 +79,36 @@ class DepartmentMemberView(APIView):
         return Response(authority.data, status=status.HTTP_200_OK)
 
     def post(self, request, format=None):
+        dep = Department.objects.get(pk=request.data['department'])
+        if dep.factory.owner == request.user:
+            status_id = 1
+        else:
+            status_id = 2
         request.data['user'] = str(request.user.id)
         data = DepartmentMemberSerilizer(data=request.data)
         if data.is_valid():
-            data.save()
+            data.save(status=Status.objects.get(pk=status_id))
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, format=None):
+        dep = Department.objects.get(pk=request.data['department'])
+        if dep.factory.owner == request.user:
+            status_id = 1
+        else:
+            status_id = 2
+
         authority = UserAuthority.objects.get(user=request.user)
         authority = DepartmentMemberSerilizer(authority, data=request.data)
         if authority.is_valid():
-            authority.save()
+            authority.save(status=Status.objects.get(pk=status_id))
             return Response(authority.data, status=status.HTTP_200_OK)
         return Response(authority.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# TODO accept or reject user
+class AuthorityMember:
+    pass
 
 
 class FactoryDepartmentView(APIView):

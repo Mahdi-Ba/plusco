@@ -10,6 +10,7 @@ urlpatterns = [
     path('factory/', views.FactoryView.as_view(), name=None),
     path('factory/<int:pk>/department', views.FactoryDepartmentView.as_view(), name=None),
     path('department/', views.DepartmentView.as_view(), name=None),
+    path('status/member', views.StatusView.as_view(), name=None),
     path('department/member', views.DepartmentMemberView.as_view(), name=None),
     path('department/<int:pk>/position', views.DepartmentPositioView.as_view(), name=None),
     path('factory/<int:pk>/area', views.FactoryAreaView.as_view(), name=None),

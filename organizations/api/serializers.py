@@ -19,10 +19,11 @@ class OrgSerilizer(serializers.ModelSerializer):
 class FactorySerilizer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=True)
     organization = serializers.CharField()
+    org_image = serializers.ImageField(source='organization.image',required=False,read_only=True)
 
     class Meta:
         model = Factory
-        fields = ['id', 'title', 'organization','image']
+        fields = ['id', 'title', 'organization','org_image']
         validators = [
             UniqueTogetherValidator(
                 queryset=Factory.objects.all(),
@@ -57,14 +58,22 @@ class DepartmentSerilizer(serializers.ModelSerializer):
         return data
 
 
+class StatusSerilizer(serializers.ModelSerializer):
+    class Meta:
+        model = Status
+        fields = ['id', 'title']
+
+
+
 class DepartmentMemberSerilizer(serializers.ModelSerializer):
     user = serializers.CharField(required=False, validators=[UniqueValidator(queryset=UserAuthority.objects.all())])
     department = serializers.CharField(required=True)
     position = serializers.CharField(required=False)
+    status_title = serializers.CharField(read_only=True,source='status')
 
     class Meta:
         model = UserAuthority
-        fields = ['id', 'user', 'department', 'position']
+        fields = ['id', 'user', 'department', 'position','status','status_title']
 
     def create(self, validate_data):
         validate_data['user'] = User.objects.get(id=int(validate_data['user']))
