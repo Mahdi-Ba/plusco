@@ -160,16 +160,18 @@ class RelationTypeSerilizer(serializers.ModelSerializer):
 
 
 class RelationSerilizer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.mobile')
+    owner = BriefUser(many=False,required=False,read_only=True)
     source = serializers.CharField(write_only=True)
     target = serializers.CharField(write_only=True)
-    source_title = serializers.CharField(source='source.title', read_only=True)
-    target_title = FactorySerilizer(source='target', read_only=True)
+    source_factory =  FactorySerilizer(source='source', read_only=True)
+    target_factory = FactorySerilizer(source='target', read_only=True)
     type = serializers.CharField()
+    status_title = serializers.CharField(read_only=True,source='status')
+
 
     class Meta:
         model = Relation
-        fields = ['id', 'owner', 'source', 'target', 'type', 'source_title', 'target_title']
+        fields = ['id', 'owner', 'source', 'target', 'type', 'source_factory', 'target_factory','status','status_title']
         validators = [
             UniqueTogetherValidator(
                 queryset=Relation.objects.all(),

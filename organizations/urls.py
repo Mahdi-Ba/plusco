@@ -22,6 +22,7 @@ urlpatterns = [
     path('position/', views.PositionView.as_view(), name=None),
     path('relation/type', views.RelationTypeView.as_view(), name=None),
     path('relation/', views.RelationView.as_view(), name=None),
+    path('newrelation/', views.NewRelationView.as_view(), name=None),
     path('admin/', views.AdminView.as_view(), name=None),
 
 ]

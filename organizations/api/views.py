@@ -74,8 +74,7 @@ class StatusView(APIView):
 class FactoryMembersView(APIView):
     def get(self, request, format=None):
         factory = UserAuthority.objects.get(user=request.user).department.factory
-        departments = Department.objects.filter(factory=factory).all()
-        users = UserAuthority.objects.filter(department__in=departments,status=1).all()
+        users = UserAuthority.objects.filter(department__factory=factory,status=1).all()
         if users:
             authority = DepartmentMemberSerilizer(users, many=True)
             return Response(authority.data, status=status.HTTP_200_OK)
@@ -119,7 +118,6 @@ class DepartmentMemberView(APIView):
         return Response(authority.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# TODO accept or reject user
 class NewRequestAuthorityMember(APIView):
     def get(self, request, format=None):
         admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=request.user).department.factory)
@@ -206,26 +204,64 @@ class AdminView(APIView):
 class RelationView(APIView):
     def get(self, request, format=None):
         authority = UserAuthority.objects.get(user=request.user)
-        relation = Relation.objects.filter(source=authority.department.factory.id)
+        relation = Relation.objects.filter(source=authority.department.factory.id,status_id=1)
         serializers = RelationSerilizer(relation, many=True)
         return Response(serializers.data)
 
     def delete(self, request):
+        admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=request.user).department.factory)
+        if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+            return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         if Relation.objects.filter(pk=request.GET['id']).exists():
-            Relation.objects.get(pk=request.GET['id']).delete()
+            relation_obj = Relation.objects.get(pk=request.GET['id'])
+            Relation.objects.get(source=relation_obj.target,target=relation_obj.source).delete()
+            relation_obj.delete()
             return Response({'status': True, 'message': "Deleted"})
         return Response({"status": False, "message": "NOT FOUND"}, status=status.HTTP_404_NOT_FOUND)
 
     def post(self, request, format=None):
+        admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=request.user).department.factory)
+        if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+            return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+
         authority = UserAuthority.objects.get(user=request.user)
         request.data['source'] = str(authority.department.factory.id)
         data = RelationSerilizer(data=request.data)
         if data.is_valid():
-            instance = data.save(owner=request.user)
+            instance = data.save(owner=request.user,status_id=2)
             Relation.objects.create(source=instance.target, target=instance.source,
-                                    type=RelationType.objects.get(id=request.data['type']).opposite_title)
+                                    type=RelationType.objects.get(id=request.data['type']).opposite_title,status_id=2)
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class NewRelationView(APIView):
+    def get(self, request, format=None):
+        admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=request.user).department.factory)
+        if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+            return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+        authority = UserAuthority.objects.get(user=request.user)
+        relation = Relation.objects.filter(source=authority.department.factory.id,status_id=2)
+        serializers = RelationSerilizer(relation, many=True)
+        return Response(serializers.data)
+
+    def post(self, request, format=None):
+        admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=request.user).department.factory)
+        if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+            return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+        if not Relation.objects.filter(pk=request.data['id'],owner=None).exists():
+            return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            relation = Relation.objects.get(pk=request.data['id'], owner=None)
+            relation.owner = request.user
+            relation.status_id = 1
+            relation.save()
+            reverce_relation = Relation.objects.get(source=relation.target, target=relation.source)
+            reverce_relation.status_id = 1
+            reverce_relation.save()
+            return Response({"status": True, 'message': 'ارتباط با ذی نفع مورد نظر برقرار شد'})
+
+
+
 
 
 class PartView(APIView):

@@ -8,7 +8,7 @@ from organizations.models import *
 class StatusAdmin(admin.ModelAdmin):
     list_display = ['title', ]
     search_fields = ['title']
-    
+
     def has_add_permission(self, request):
         return False
 
@@ -68,7 +68,7 @@ class RelationTypeAdmin(admin.ModelAdmin):
 
 @admin.register(Relation)
 class RelationAdmin(admin.ModelAdmin):
-    list_display = ['user', 'owner', 'source', 'target', 'type']
+    list_display = ['user', 'owner', 'source', 'target', 'type','status']
     search_fields = ['user', ]
 
 

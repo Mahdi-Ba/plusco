@@ -127,6 +127,8 @@ class Relation(models.Model):
     source = models.ForeignKey(Factory,related_name='source',on_delete=models.SET_NULL,null=True)
     target = models.ForeignKey(Factory,related_name='target',on_delete=models.SET_NULL,null=True)
     type = models.ForeignKey(RelationType,on_delete=models.SET_NULL,null=True)
+    status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
+
 
     class Meta:
         unique_together = ['source', 'target', ]
