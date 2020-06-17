@@ -48,7 +48,6 @@ class FactoryView(APIView):
         return Response(serilizer.data)
 
 
-
 class DepartmentView(APIView):
     def post(self, request, format=None):
         data = DepartmentSerilizer(data=request.data)
@@ -58,13 +57,12 @@ class DepartmentView(APIView):
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 class DepartmentPositioView(APIView):
     def get(self, request, pk, format=None):
         data = Position.objects.filter(department__exact=pk).all()
         serilizer = PositionSerilizer(data, many=True)
         return Response(serilizer.data)
+
 
 class StatusView(APIView):
     def get(self, request, format=None):
@@ -72,11 +70,26 @@ class StatusView(APIView):
         serilizer = StatusSerilizer(data, many=True)
         return Response(serilizer.data)
 
+
+class FactoryMembersView(APIView):
+    def get(self, request, format=None):
+        factory = UserAuthority.objects.get(user=request.user).department.factory
+        departments = Department.objects.filter(factory=factory).all()
+        users = UserAuthority.objects.filter(department__in=departments,status=1).all()
+        if users:
+            authority = DepartmentMemberSerilizer(users, many=True)
+            return Response(authority.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"status": False, 'message': "Not Found"}, status=status.HTTP_404_NOT_FOUND)
+
 class DepartmentMemberView(APIView):
     def get(self, request, format=None):
-        authority = UserAuthority.objects.get(user=request.user)
-        authority = DepartmentMemberSerilizer(authority, many=False)
-        return Response(authority.data, status=status.HTTP_200_OK)
+        if UserAuthority.objects.filter(user=request.user).exists():
+            authority = UserAuthority.objects.get(user=request.user)
+            authority = DepartmentMemberSerilizer(authority, many=False)
+            return Response(authority.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"status": False, 'message': "Not Found"}, status=status.HTTP_404_NOT_FOUND)
 
     def post(self, request, format=None):
         dep = Department.objects.get(pk=request.data['department'])
@@ -107,8 +120,31 @@ class DepartmentMemberView(APIView):
 
 
 # TODO accept or reject user
-class AuthorityMember:
-    pass
+class NewRequestAuthorityMember(APIView):
+    def get(self, request, format=None):
+        admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=request.user).department.factory)
+        if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+            return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            new_user = UserAuthority.objects.filter(department=UserAuthority.objects.get(user=request.user).department,
+                                                    status=2).all()
+            return Response(DepartmentMemberSerilizer(new_user, many=True).data)
+
+    def post(self, request, format=None):
+        admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=request.user).department.factory)
+        if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+            return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            user = UserAuthority.objects.get(pk=request.data['id'], user=User.objects.get(mobile__exact=request.data['mobile']))
+            if request.data['active'] == 1:
+                user.status_id = 1
+                user.save()
+                return Response({'status':True,'message':'فعال شد'})
+            else:
+                user.delete()
+                return Response({'status':True,'message':'حذف شد'})
+
+
 
 
 class FactoryDepartmentView(APIView):
@@ -186,7 +222,8 @@ class RelationView(APIView):
         data = RelationSerilizer(data=request.data)
         if data.is_valid():
             instance = data.save(owner=request.user)
-            Relation.objects.create(source=instance.target,target=instance.source,type=RelationType.objects.get(id=request.data['type']).opposite_title)
+            Relation.objects.create(source=instance.target, target=instance.source,
+                                    type=RelationType.objects.get(id=request.data['type']).opposite_title)
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 

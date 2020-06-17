@@ -15,7 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['mobile', 'first_name', 'last_name', 'national_code', 'password', 'expire_pass', 'birth_date', 'file','trusted']
+        fields = ['id','mobile', 'first_name', 'last_name', 'national_code', 'password', 'expire_pass', 'birth_date', 'file','trusted']
 
     def create(self, validated_data):
         user = super(UserSerializer, self).create(validated_data)
@@ -36,4 +36,4 @@ class UserSerializer(serializers.ModelSerializer):
 class BriefUser(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['mobile', 'first_name', 'last_name',]
+        fields = ['id','mobile', 'first_name', 'last_name',]
