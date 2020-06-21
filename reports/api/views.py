@@ -84,6 +84,17 @@ class ConformityView(APIView):
             return Response(conformity.data, status=status.HTTP_200_OK)
         return Response(conformity.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class ConformityConfirmView(APIView):
+    def post(self, request,pk, format=None):
+        data = Conformity.objects.get(pk=pk)
+        if data.owner != request.user:
+            return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
+        data.status_id = request.data['status']
+        data.save()
+        serilizer = ConformitySerilizer(data, many=False)
+        return Response(serilizer.data)
+
 class ConformityDetailView(APIView):
     def get(self, request,pk, format=None):
         data = Conformity.objects.get(pk=pk)
@@ -118,7 +129,7 @@ class ActionMyBoardView(APIView,PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     def get(self, request, format=None):
-        action = Action.objects.filter(execute_owner=request.user).order_by('-id')
+        action = Action.objects.filter(execute_department=UserAuthority.objects.get(user=request.user).department).order_by('-id')
         page = self.paginate_queryset(action)
         if page is not None:
             serializer = self.get_paginated_response(ActionSerilizer(page,many=True).data)
@@ -139,12 +150,12 @@ class ActionView(APIView):
 
 class ActionReplyView(APIView):
     def post(self, request, format=None):
-        action_nomber = request.data.pop('action')
-        if Action.objects.get(pk=action_nomber).execute_owner != request.user:
+        action_number = request.data.pop('action')
+        if Action.objects.get(pk=action_number).execute_owner != request.user:
             return Response({"status":False,'message':"دسترسی ندارید"},status=status.HTTP_403_FORBIDDEN)
 
         files = request.data.pop('files')
-        action = ActionSerilizer(Action.objects.get(pk=action_nomber),data=request.data)
+        action = ActionSerilizer(Action.objects.get(pk=action_number),data=request.data)
         if action.is_valid():
             action_obj = action.save()
             for file in files:
@@ -158,5 +169,16 @@ class ActionReplyView(APIView):
                     obj = serializer.save()
             return Response(action.data, status=status.HTTP_200_OK)
         return Response(action.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ActionConfirmView(APIView):
+    def post(self, request,pk, format=None):
+        if Action.objects.get(pk=pk).execute_owner != request.user:
+            return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
+
+        action = Action.objects.get(pk=pk)
+        action.status_id = request.data['status']
+        action.save()
+        return Response(ActionSerilizer(action).data)
 
 

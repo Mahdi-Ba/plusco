@@ -44,6 +44,8 @@ class ActionSerilizer(serializers.ModelSerializer):
     reply_text = serializers.CharField(max_length=1000, required=False)
     due_date = serializers.DateField(required=False, format="%s")
     action_gallery = ActionGallerySerilizer(read_only=True, many=True)
+    status = serializers.CharField(required=False)
+
 
     class Meta:
         model = Action
@@ -61,7 +63,7 @@ class ActionSerilizer(serializers.ModelSerializer):
             'conformity',
             'conformity_id',
             'action_gallery',
-            'owner_detail', 'execute_owner_detail'
+            'owner_detail', 'execute_owner_detail','status'
         ]
 
     def create(self, validate_data):
