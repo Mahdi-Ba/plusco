@@ -173,7 +173,7 @@ class ActionReplyView(APIView):
 
 class ActionConfirmView(APIView):
     def post(self, request,pk, format=None):
-        if Action.objects.get(pk=pk).execute_owner != request.user:
+        if Action.objects.get(pk=pk).owner != request.user:
             return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
 
         action = Action.objects.get(pk=pk)
