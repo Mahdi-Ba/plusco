@@ -70,7 +70,7 @@ class ActionSerilizer(serializers.ModelSerializer):
         validate_data['execute_department'] = Department.objects.get(pk=validate_data['execute_department'])
         validate_data['conformity'] = Conformity.objects.get(pk=validate_data['conformity'])
         if validate_data.get('status', False):
-            validate_data['status'] = Status.objects.get(pk=validate_data['status'])
+            validate_data['status'] = ActionStatus.objects.get(pk=validate_data['status'])
         data = Action.objects.create(**validate_data)
         return data
 
