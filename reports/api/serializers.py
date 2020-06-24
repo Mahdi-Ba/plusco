@@ -68,7 +68,8 @@ class ActionSerilizer(serializers.ModelSerializer):
         ]
 
     def get_conformity_gallery(self,instance):
-        return 'data'
+        data = ConformityGallery.objects.filter(pk=instance.conformity.id).all()
+        return ConformityGallerySerilizer(data,many=True).data
 
     def create(self, validate_data):
         validate_data['execute_department'] = Department.objects.get(pk=validate_data['execute_department'])
