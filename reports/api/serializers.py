@@ -39,7 +39,7 @@ class ActionSerilizer(serializers.ModelSerializer):
     execute_owner_detail = BriefUser(many=False, required=False, read_only=True, source='execute_owner')
     conformity = serializers.CharField(required=False)
     conformity_id = serializers.IntegerField(source='conformity.id', read_only=True)
-    conformity_gallery =  ConformityGallerySerilizer(read_only=True, many=True,source='conformity')
+    conformity_gallery =  serializers.SerializerMethodField()
     title = serializers.CharField(max_length=255, required=False)
     text = serializers.CharField(max_length=1000, required=False)
     reply_text = serializers.CharField(max_length=1000, required=False)
@@ -66,6 +66,9 @@ class ActionSerilizer(serializers.ModelSerializer):
             'action_gallery',
             'owner_detail', 'execute_owner_detail','status','conformity_gallery'
         ]
+
+    def get_conformity_gallery(self,instance):
+        return 'data'
 
     def create(self, validate_data):
         validate_data['execute_department'] = Department.objects.get(pk=validate_data['execute_department'])
