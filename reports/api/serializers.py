@@ -63,14 +63,15 @@ class ActionSerilizer(serializers.ModelSerializer):
             'conformity',
             'conformity_id',
             'action_gallery',
-            'owner_detail', 'execute_owner_detail','status'
+            'owner_detail', 'execute_owner_detail','status',
         ]
+
 
     def create(self, validate_data):
         validate_data['execute_department'] = Department.objects.get(pk=validate_data['execute_department'])
         validate_data['conformity'] = Conformity.objects.get(pk=validate_data['conformity'])
         if validate_data.get('status', False):
-            validate_data['status'] = Status.objects.get(pk=validate_data['status'])
+            validate_data['status'] = ActionStatus.objects.get(pk=validate_data['status'])
         data = Action.objects.create(**validate_data)
         return data
 
