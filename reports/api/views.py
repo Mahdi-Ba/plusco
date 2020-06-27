@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import Q
-from organizations.models import UserAuthority
+from organizations.models import UserAuthority, AdminGroup
 from plusco.pagination import PaginationHandlerMixin
 from .serializers import *
 from rest_framework import status
@@ -140,6 +140,9 @@ class ActionMyBoardView(APIView,PaginationHandlerMixin):
         return Response(serializer.data, status=status.HTTP_200_OK)
 class ActionView(APIView):
     def post(self, request, format=None):
+        # todo
+        # admin_group = AdminGroup.objects.get(factory=Department.objects.get(pk = request.data['execute_department']).factory)
+        # AdminUser.ob
         action = ActionSerilizer(data=request.data)
         if action.is_valid():
             authority = UserAuthority.objects.get(user=request.user)
