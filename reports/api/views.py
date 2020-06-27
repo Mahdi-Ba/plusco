@@ -1,6 +1,6 @@
 import base64
 import uuid
-
+from fcm_django.models import FCMDevice
 from django.core.files.base import ContentFile
 from django.db.models import Q
 from django.http import Http404
@@ -10,7 +10,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import Q
-from organizations.models import UserAuthority, AdminGroup
+from organizations.models import UserAuthority, AdminGroup, AdminUser
 from plusco.pagination import PaginationHandlerMixin
 from .serializers import *
 from rest_framework import status
@@ -140,9 +140,15 @@ class ActionMyBoardView(APIView,PaginationHandlerMixin):
         return Response(serializer.data, status=status.HTTP_200_OK)
 class ActionView(APIView):
     def post(self, request, format=None):
-        # todo
-        # admin_group = AdminGroup.objects.get(factory=Department.objects.get(pk = request.data['execute_department']).factory)
+        # todo notif
+        # admin_group = AdminGroup.objects.get(factory=Department.objects.get(pk = request.data['department']).factory)
+        # AdminUser.objects.filter(admin_group=admin_group).all()
         # AdminUser.ob
+        # admin_user = AdminUser.objects.filter(admin_group=AdminGroup.objects.get(factory_id=request.data['target'])).all()
+        # users = UserAuthority.objects.filter(department_id=request.data['execute_department']).all()
+        # device = FCMDevice.objects.filter(user_id_in=request.user.id, active=1).all()
+        # device.send_message(title=request.data['title'], body=request.data['body'], data=request.data['data'])
+        #
         action = ActionSerilizer(data=request.data)
         if action.is_valid():
             authority = UserAuthority.objects.get(user=request.user)
