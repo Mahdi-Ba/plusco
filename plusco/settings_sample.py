@@ -60,7 +60,7 @@ INSTALLED_APPS = [
 
 FCM_DJANGO_SETTINGS = {
         "APP_VERBOSE_NAME": "fcm",
-        "FCM_SERVER_KEY": "[your api key]",
+        "FCM_SERVER_KEY": "AAAAP_lyPlY:APA91bH-cLsF2vsJU3ejgPYj3OpeTwPKlo_rJ8KFgO7_Hbc6JjCRcLMo_un1pUc4sROMPB1qIh8uwdsuv3x2kF-HglzYAOBPs1s4bRYbUHq89pxAFDuyUNbExPqHDBrvM27IGjWF3mla",
 }
 
 
