@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from .serializers import *
 from rest_framework import status
 from ..models import *
+from fcm_django.models import FCMDevice
 
 
 class OrganizationView(APIView):
@@ -95,6 +96,16 @@ class DepartmentMemberView(APIView):
         if dep.factory.owner == request.user:
             status_id = 1
         else:
+            # TODO
+            # admin_group = AdminGroup.objects.get(factory=Department.objects.get(pk=request.data['department']).factory)
+            # user_ids = AdminUser.objects.filter(admin_group=admin_group).all().values_list('user_id',flat=True)
+            # device = FCMDevice.objects.filter(user_id__in=user_ids).all()
+            # data = {
+            #     "type": "accept-user",
+            #     "priority": "high",
+            #     "click_action": "FLUTTER_NOTIFICATION_CLICK"
+            # }
+            # device.send_message(title='تقاضای عضویت', body='یک در خواست جدید عضویت ثبت شد', data=data)
             status_id = 2
         request.data['user'] = str(request.user.id)
         data = DepartmentMemberSerilizer(data=request.data)
@@ -108,6 +119,16 @@ class DepartmentMemberView(APIView):
         if dep.factory.owner == request.user:
             status_id = 1
         else:
+            # TODO test notif
+            # admin_group = AdminGroup.objects.get(factory=Department.objects.get(pk=request.data['department']).factory)
+            # user_ids = AdminUser.objects.filter(admin_group=admin_group).all().values_list('user_id',flat=True)
+            # device = FCMDevice.objects.filter(user_id__in=user_ids).all()
+            # data = {
+            #     "type": "accept-user",
+            #     "priority": "high",
+            #     "click_action": "FLUTTER_NOTIFICATION_CLICK"
+            # }
+            # device.send_message(title='تقاضای عضویت', body='یک در خواست جدید عضویت ثبت شد', data=data)
             status_id = 2
 
         authority = UserAuthority.objects.get(user=request.user)
@@ -224,6 +245,8 @@ class RelationView(APIView):
         if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
 
+
+
         authority = UserAuthority.objects.get(user=request.user)
         request.data['source'] = str(authority.department.factory.id)
         data = RelationSerilizer(data=request.data)
@@ -231,6 +254,16 @@ class RelationView(APIView):
             instance = data.save(owner=request.user,status_id=2)
             Relation.objects.create(source=instance.target, target=instance.source,
                                     type=RelationType.objects.get(id=request.data['type']).opposite_title,status_id=2)
+            # TODO
+            # admin_user = AdminUser.objects.filter(
+            #     admin_group=AdminGroup.objects.get(factory_id=request.data['target'])).all().values_list('user_id',flat=True)
+            # device = FCMDevice.objects.filter(user_id__in=admin_user).all()
+            # data = {
+            #     "type": "accept-relation",
+            #     "priority": "high",
+            #     "click_action": "FLUTTER_NOTIFICATION_CLICK"
+            # }
+            # device.send_message(title='تقاضای ذینفع', body='یک در خواست جدید  ثبت شد', data=data)
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 

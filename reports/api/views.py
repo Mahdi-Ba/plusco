@@ -15,10 +15,12 @@ from plusco.pagination import PaginationHandlerMixin
 from .serializers import *
 from rest_framework import status
 from ..models import *
+from fcm_django.models import FCMDevice
 
 
 class BasicPagination(PageNumberPagination):
     page_size_query_param = 'limit'
+
 
 class StatusConformityView(APIView):
     def get(self, request, format=None):
@@ -26,13 +28,15 @@ class StatusConformityView(APIView):
         serilizer = StatusSerilizer(data, many=True)
         return Response(serilizer.data)
 
+
 class StatusActionView(APIView):
     def get(self, request, format=None):
         data = ActionStatus.objects.all()
         serilizer = StatusSerilizer(data, many=True)
         return Response(serilizer.data)
 
-class ConformityFactoryBoardView(APIView,PaginationHandlerMixin):
+
+class ConformityFactoryBoardView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     def get(self, request, format=None):
@@ -40,29 +44,27 @@ class ConformityFactoryBoardView(APIView,PaginationHandlerMixin):
         conformity = Conformity.objects.filter(receiver_factory=authority).order_by('-id')
         page = self.paginate_queryset(conformity)
         if page is not None:
-            serializer = self.get_paginated_response(ConformityBriefSerilizer(page,many=True).data)
+            serializer = self.get_paginated_response(ConformityBriefSerilizer(page, many=True).data)
 
         else:
             serializer = ConformityBriefSerilizer(conformity, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-class ConformityMyBoardView(APIView,PaginationHandlerMixin):
+
+class ConformityMyBoardView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     def get(self, request, format=None):
         conformity = Conformity.objects.filter(owner=request.user).order_by('-id')
         page = self.paginate_queryset(conformity)
         if page is not None:
-            serializer = self.get_paginated_response(ConformityBriefSerilizer(page,many=True).data)
+            serializer = self.get_paginated_response(ConformityBriefSerilizer(page, many=True).data)
 
         else:
             serializer = ConformityBriefSerilizer(conformity, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-
 
 
 class ConformityView(APIView):
@@ -71,7 +73,7 @@ class ConformityView(APIView):
         conformity = ConformitySerilizer(data=request.data)
         if conformity.is_valid():
             authority = UserAuthority.objects.get(user=request.user)
-            conformity_obj = conformity.save(owner=request.user,owner_factory= authority.department.factory)
+            conformity_obj = conformity.save(owner=request.user, owner_factory=authority.department.factory)
             for file in files:
                 format, imgstr = file.split(';base64,')
                 ext = format.split('/')[-1]
@@ -86,7 +88,7 @@ class ConformityView(APIView):
 
 
 class ConformityConfirmView(APIView):
-    def post(self, request,pk, format=None):
+    def post(self, request, pk, format=None):
         data = Conformity.objects.get(pk=pk)
         if data.owner != request.user:
             return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
@@ -95,17 +97,20 @@ class ConformityConfirmView(APIView):
         serilizer = ConformitySerilizer(data, many=False)
         return Response(serilizer.data)
 
+
 class ConformityDetailView(APIView):
-    def get(self, request,pk, format=None):
+    def get(self, request, pk, format=None):
         data = Conformity.objects.get(pk=pk)
         serilizer = ConformitySerilizer(data, many=False)
         return Response(serilizer.data)
 
+
 class ActionDetailView(APIView):
-    def get(self, request,pk, format=None):
+    def get(self, request, pk, format=None):
         data = Action.objects.get(pk=pk)
         serilizer = ActionSerilizer(data, many=False)
         return Response(serilizer.data)
+
 
 class CatchActionView(APIView):
     def post(self, request, format=None):
@@ -116,6 +121,7 @@ class CatchActionView(APIView):
         serilizer = ActionSerilizer(data, many=False)
         return Response(serilizer.data)
 
+
 class RejectActionView(APIView):
     def post(self, request, format=None):
         data = Action.objects.get(pk=request.data['action'])
@@ -125,34 +131,42 @@ class RejectActionView(APIView):
         serilizer = ActionSerilizer(data, many=False)
         return Response(serilizer.data)
 
-class ActionMyBoardView(APIView,PaginationHandlerMixin):
+
+class ActionMyBoardView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     def get(self, request, format=None):
-        action = Action.objects.filter(execute_department=UserAuthority.objects.get(user=request.user).department).order_by('-id')
+        action = Action.objects.filter(
+            execute_department=UserAuthority.objects.get(user=request.user).department).order_by('-id')
         page = self.paginate_queryset(action)
         if page is not None:
-            serializer = self.get_paginated_response(ActionSerilizer(page,many=True).data)
+            serializer = self.get_paginated_response(ActionSerilizer(page, many=True).data)
 
         else:
             serializer = ActionSerilizer(action, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class ActionView(APIView):
     def post(self, request, format=None):
-        # todo notif
-        # admin_group = AdminGroup.objects.get(factory=Department.objects.get(pk = request.data['department']).factory)
-        # AdminUser.objects.filter(admin_group=admin_group).all()
-        # AdminUser.ob
-        # admin_user = AdminUser.objects.filter(admin_group=AdminGroup.objects.get(factory_id=request.data['target'])).all()
-        # users = UserAuthority.objects.filter(department_id=request.data['execute_department']).all()
-        # device = FCMDevice.objects.filter(user_id_in=request.user.id, active=1).all()
-        # device.send_message(title=request.data['title'], body=request.data['body'], data=request.data['data'])
-        #
+
         action = ActionSerilizer(data=request.data)
         if action.is_valid():
             authority = UserAuthority.objects.get(user=request.user)
-            action_obj = action.save(owner=request.user,owner_factory= authority.department.factory)
+            action_obj = action.save(owner=request.user, owner_factory=authority.department.factory)
+            # todo notif
+            # users = UserAuthority.objects.filter(department_id=request.data['execute_department']).all().values_list(
+            #     'user_id', flat=True)
+            # device = FCMDevice.objects.filter(user_id__in=users).all()
+            # data = {
+            #     "type": "action",
+            #     "action_id": action_obj.id,
+            #     "conformity_detail": request.data['conformity'],
+            #     "priority": "high",
+            #     "click_action": "FLUTTER_NOTIFICATION_CLICK"
+            # }
+            # device.send_message(title='اقدام', body='یک در خواست جدید عضویت ثبت شد', data=data)
             return Response(action.data, status=status.HTTP_200_OK)
         return Response(action.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -161,10 +175,10 @@ class ActionReplyView(APIView):
     def post(self, request, format=None):
         action_number = request.data.pop('action')
         if Action.objects.get(pk=action_number).execute_owner != request.user:
-            return Response({"status":False,'message':"دسترسی ندارید"},status=status.HTTP_403_FORBIDDEN)
+            return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
 
         files = request.data.pop('files')
-        action = ActionSerilizer(Action.objects.get(pk=action_number),data=request.data)
+        action = ActionSerilizer(Action.objects.get(pk=action_number), data=request.data)
         if action.is_valid():
             action_obj = action.save()
             for file in files:
@@ -181,7 +195,7 @@ class ActionReplyView(APIView):
 
 
 class ActionConfirmView(APIView):
-    def post(self, request,pk, format=None):
+    def post(self, request, pk, format=None):
         if Action.objects.get(pk=pk).owner != request.user:
             return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
 
@@ -189,5 +203,3 @@ class ActionConfirmView(APIView):
         action.status_id = request.data['status']
         action.save()
         return Response(ActionSerilizer(action).data)
-
-
