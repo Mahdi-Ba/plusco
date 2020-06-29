@@ -155,18 +155,17 @@ class ActionView(APIView):
         if action.is_valid():
             authority = UserAuthority.objects.get(user=request.user)
             action_obj = action.save(owner=request.user, owner_factory=authority.department.factory)
-            # todo notif
-            # users = UserAuthority.objects.filter(department_id=request.data['execute_department']).all().values_list(
-            #     'user_id', flat=True)
-            # device = FCMDevice.objects.filter(user_id__in=users).all()
-            # data = {
-            #     "type": "action",
-            #     "action_id": action_obj.id,
-            #     "conformity_detail": request.data['conformity'],
-            #     "priority": "high",
-            #     "click_action": "FLUTTER_NOTIFICATION_CLICK"
-            # }
-            # device.send_message(title='اقدام', body='یک در خواست جدید عضویت ثبت شد', data=data)
+            users = UserAuthority.objects.filter(department_id=request.data['execute_department']).all().values_list(
+                'user_id', flat=True)
+            device = FCMDevice.objects.filter(user_id__in=users).all()
+            data = {
+                "type": "action",
+                "action_id": action_obj.id,
+                "conformity_detail": request.data['conformity'],
+                "priority": "high",
+                "click_action": "FLUTTER_NOTIFICATION_CLICK"
+            }
+            device.send_message(title='اقدام', body='یک در خواست جدید عضویت ثبت شد', data=data)
             return Response(action.data, status=status.HTTP_200_OK)
         return Response(action.errors, status=status.HTTP_400_BAD_REQUEST)
 
