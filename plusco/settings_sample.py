@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "fcm_django",
     'pluscofcm.apps.PluscofcmConfig',
     "pages",
+    "silk"
 
     # 'rest_framework_swagger',
 
@@ -74,6 +75,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'silk.middleware.SilkyMiddleware',
+
 ]
 
 ROOT_URLCONF = 'plusco.urls'
