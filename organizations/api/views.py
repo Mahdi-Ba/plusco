@@ -153,6 +153,14 @@ class NewRequestAuthorityMember(APIView):
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         else:
             user = UserAuthority.objects.get(pk=request.data['id'], user=User.objects.get(mobile__exact=request.data['mobile']))
+            device = FCMDevice.objects.filter(user=User.objects.get(mobile=request.data['mobile'])).all()
+            payload = {
+                "type": "get-accept-state",
+                "priority": "high",
+                "state":request.data['active'],
+                "click_action": "FLUTTER_NOTIFICATION_CLICK"
+            }
+            device.send_message(title='بررسی درخواست ورود', body='درخواست شما بررسی شد', data=payload)
             if request.data['active'] == 1:
                 user.status_id = 1
                 user.save()
