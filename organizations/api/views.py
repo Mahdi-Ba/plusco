@@ -166,6 +166,9 @@ class NewRequestAuthorityMember(APIView):
                 user.save()
                 return Response({'status':True,'message':'فعال شد'})
             else:
+                admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=user).department.factory)
+                if AdminUser.objects.filter(admin_group=admin_group, user=user).exists():
+                    AdminUser.objects.get(admin_group=admin_group, user=user).delete()
                 user.delete()
                 return Response({'status':True,'message':'حذف شد'})
 
@@ -226,6 +229,15 @@ class AdminView(APIView):
             return Response(serilizer.data)
         except Exception as e:
             return Response({'status': False, "debug": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, format=None):
+        admin_group = AdminGroup.objects.get(
+            factory=UserAuthority.objects.get(user=request.user).department.factory)
+        user = User.objects.get(mobile__exact=request.data['mobile'])
+        if AdminUser.objects.filter(user=user, admin_group=admin_group).exists():
+            AdminUser.objects.get(user=user, admin_group=admin_group).delete()
+            return Response({'status':True,"message":"با موفقیت پاک شد"})
+        return Response({'status':False,"message":"یافت نشد"},status=status.HTTP_404_NOT_FOUND)
 
 
 class RelationView(APIView):
