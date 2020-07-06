@@ -152,7 +152,11 @@ class NewRequestAuthorityMember(APIView):
         if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         else:
-            user = UserAuthority.objects.get(pk=request.data['id'], user=User.objects.get(mobile__exact=request.data['mobile']))
+            user =User.objects.get(mobile__exact=request.data['mobile'])
+            if admin_group.owner.id == user.id:
+                return Response({"status": False, 'message': 'مالک کارگاه'}, status=status.HTTP_400_BAD_REQUEST)
+
+            user_authority = UserAuthority.objects.get(pk=request.data['id'], user=user)
             device = FCMDevice.objects.filter(user=User.objects.get(mobile=request.data['mobile'])).all()
             payload = {
                 "type": "get-accept-state",
@@ -162,14 +166,14 @@ class NewRequestAuthorityMember(APIView):
             }
             device.send_message(title='بررسی درخواست ورود', body='درخواست شما بررسی شد', data=payload)
             if request.data['active'] == 1:
-                user.status_id = 1
-                user.save()
+                user_authority.status_id = 1
+                user_authority.save()
                 return Response({'status':True,'message':'فعال شد'})
             else:
-                admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=user).department.factory)
-                if AdminUser.objects.filter(admin_group=admin_group, user=user).exists():
-                    AdminUser.objects.get(admin_group=admin_group, user=user).delete()
-                user.delete()
+                admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=user_authority).department.factory)
+                if AdminUser.objects.filter(admin_group=admin_group, user=user_authority).exists():
+                    AdminUser.objects.get(admin_group=admin_group, user=user_authority).delete()
+                user_authority.delete()
                 return Response({'status':True,'message':'حذف شد'})
 
 
@@ -234,6 +238,8 @@ class AdminView(APIView):
         admin_group = AdminGroup.objects.get(
             factory=UserAuthority.objects.get(user=request.user).department.factory)
         user = User.objects.get(mobile__exact=request.data['mobile'])
+        if admin_group.owner.id == user.id:
+            return Response({'status': False, "message": "مالک کارگاه"}, status=status.HTTP_400_BAD_REQUEST)
         if AdminUser.objects.filter(user=user, admin_group=admin_group).exists():
             AdminUser.objects.get(user=user, admin_group=admin_group).delete()
             return Response({'status':True,"message":"با موفقیت پاک شد"})
