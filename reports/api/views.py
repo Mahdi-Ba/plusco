@@ -165,7 +165,7 @@ class ActionView(APIView):
                 "priority": "high",
                 "click_action": "FLUTTER_NOTIFICATION_CLICK"
             }
-            device.send_message(title='اقدام', body='یک در خواست جدید عضویت ثبت شد', data=data)
+            device.send_message(title='اقدام', body='یک اقدام جدید ثبت شد', data=data)
             return Response(action.data, status=status.HTTP_200_OK)
         return Response(action.errors, status=status.HTTP_400_BAD_REQUEST)
 
