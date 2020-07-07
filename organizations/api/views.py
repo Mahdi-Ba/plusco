@@ -130,11 +130,12 @@ class DepartmentMemberView(APIView):
             status_id = 2
 
         authority = UserAuthority.objects.get(user=request.user)
-        authority = DepartmentMemberSerilizer(authority, data=request.data)
-        if authority.is_valid():
-            authority.save(status=Status.objects.get(pk=status_id))
-            return Response(authority.data, status=status.HTTP_200_OK)
-        return Response(authority.errors, status=status.HTTP_400_BAD_REQUEST)
+        request.data['status_item'] = status_id
+        data = DepartmentMemberSerilizer(authority, data=request.data)
+        if data.is_valid():
+            instance = data.save()
+            return Response(data.data, status=status.HTTP_200_OK)
+        return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class NewRequestAuthorityMember(APIView):

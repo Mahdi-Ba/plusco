@@ -72,11 +72,12 @@ class DepartmentMemberSerilizer(serializers.ModelSerializer):
     department = serializers.CharField(required=True)
     position = serializers.CharField(required=False)
     status_title = serializers.CharField(read_only=True,source='status')
+    status_item = serializers.IntegerField(required=False,write_only=True,source='status')
     factory = FactorySerilizer(read_only=True,required=False,source='department.factory')
 
     class Meta:
         model = UserAuthority
-        fields = ['id', 'user','user_detail', 'department', 'position','status','status_title','factory']
+        fields = ['id', 'user','user_detail', 'department', 'position','status','status_title','factory','status_item']
 
     def create(self, validate_data):
         validate_data['user'] = User.objects.get(id=int(validate_data['user']))
@@ -86,9 +87,11 @@ class DepartmentMemberSerilizer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance.user = instance.user
+        instance.status_id = validated_data['status']
         instance.department = Department.objects.get(pk=validated_data['department'])
         if validated_data.get('position', False):
             instance.position = Position.objects.get(pk=validated_data['position'])
+
         instance.save()
         return instance
 
