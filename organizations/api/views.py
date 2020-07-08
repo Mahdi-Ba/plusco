@@ -92,10 +92,12 @@ class DepartmentMemberView(APIView):
             return Response({"status": False, 'message': "Not Found"}, status=status.HTTP_404_NOT_FOUND)
 
     def post(self, request, format=None):
+        send_notif = False
         dep = Department.objects.get(pk=request.data['department'])
         if dep.factory.owner == request.user:
             status_id = 1
         else:
+            send_notif = True
             admin_group = AdminGroup.objects.get(factory=Department.objects.get(pk=request.data['department']).factory)
             user_ids = AdminUser.objects.filter(admin_group=admin_group).all().values_list('user_id',flat=True)
             device = FCMDevice.objects.filter(user_id__in=user_ids).all()
@@ -104,20 +106,23 @@ class DepartmentMemberView(APIView):
                 "priority": "high",
                 "click_action": "FLUTTER_NOTIFICATION_CLICK"
             }
-            device.send_message(title='تقاضای عضویت', body='یک در خواست جدید عضویت ثبت شد', data=payload)
             status_id = 2
         request.data['user'] = str(request.user.id)
         data = DepartmentMemberSerilizer(data=request.data)
         if data.is_valid():
             data.save(status=Status.objects.get(pk=status_id))
+            if send_notif == True:
+                device.send_message(title='تقاضای عضویت', body='یک در خواست جدید عضویت ثبت شد', data=payload)
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, format=None):
+        send_notif = False
         dep = Department.objects.get(pk=request.data['department'])
         if dep.factory.owner == request.user:
             status_id = 1
         else:
+            send_notif = True
             admin_group = AdminGroup.objects.get(factory=Department.objects.get(pk=request.data['department']).factory)
             user_ids = AdminUser.objects.filter(admin_group=admin_group).all().values_list('user_id',flat=True)
             device = FCMDevice.objects.filter(user_id__in=user_ids).all()
@@ -126,7 +131,6 @@ class DepartmentMemberView(APIView):
                 "priority": "high",
                 "click_action": "FLUTTER_NOTIFICATION_CLICK"
             }
-            device.send_message(title='تقاضای عضویت', body='یک در خواست جدید عضویت ثبت شد', data=payload)
             status_id = 2
 
         authority = UserAuthority.objects.get(user=request.user)
@@ -134,6 +138,8 @@ class DepartmentMemberView(APIView):
         data = DepartmentMemberSerilizer(authority, data=request.data)
         if data.is_valid():
             instance = data.save()
+            if send_notif == True:
+                device.send_message(title='تقاضای عضویت', body='یک در خواست جدید عضویت ثبت شد', data=payload)
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 

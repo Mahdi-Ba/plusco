@@ -56,14 +56,12 @@ class ConformityMyBoardView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     def get(self, request, format=None):
-        conformity = Conformity.objects.filter(owner=request.user).order_by('-id')
+        conformity = Conformity.objects.filter(owner=request.user,owner_factory=UserAuthority.objects.get(user=request.user).department.factory).order_by('-id')
         page = self.paginate_queryset(conformity)
         if page is not None:
             serializer = self.get_paginated_response(ConformityBriefSerilizer(page, many=True).data)
-
         else:
             serializer = ConformityBriefSerilizer(conformity, many=True)
-
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
