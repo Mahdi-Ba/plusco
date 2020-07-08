@@ -10,10 +10,11 @@ from django.urls import reverse
 class OrgSerilizer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=True,
                                   validators=[UniqueValidator(queryset=Organization.objects.all())])
+    image = serializers.FileField(required=False)
 
     class Meta:
         model = Organization
-        fields = ['id', 'title']
+        fields = ['id', 'title','image']
 
 
 class FactorySerilizer(serializers.ModelSerializer):

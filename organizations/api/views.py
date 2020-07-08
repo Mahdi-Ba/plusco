@@ -1,5 +1,8 @@
+import base64
+import uuid
 from dbm import error
 
+from django.core.files.base import ContentFile
 from django.db.models import Q
 from django.http import Http404
 from rest_framework.decorators import permission_classes
@@ -19,6 +22,12 @@ class OrganizationView(APIView):
         return Response(serilizer.data)
 
     def post(self, request, format=None):
+        if request.data.get('image', False):
+            base64_file = request.data.pop('image')
+            format, imgstr = base64_file.split(';base64,')
+            ext = format.split('/')[-1]
+            image = ContentFile(base64.b64decode(imgstr), name=str(uuid.uuid4()) + "." + ext)
+            request.data['image'] = image
         data = OrgSerilizer(data=request.data)
         if data.is_valid():
             data.save(owner=request.user)
