@@ -128,7 +128,8 @@ class DepartmentMemberView(APIView):
     def put(self, request, format=None):
         send_notif = False
         dep = Department.objects.get(pk=request.data['department'])
-        if dep.factory.owner == request.user or UserAuthority.objects.get(user=request.user).department.factory == dep.factory:
+        if dep.factory.owner == request.user or\
+                (UserAuthority.objects.get(user=request.user).department.factory == dep.factory and UserAuthority.objects.get(user=request.user).status_id == 1):
             status_id = 1
         else:
             send_notif = True
