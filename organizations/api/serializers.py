@@ -68,17 +68,18 @@ class StatusSerilizer(serializers.ModelSerializer):
 
 
 class DepartmentMemberSerilizer(serializers.ModelSerializer):
-    user = serializers.CharField(required=False, validators=[UniqueValidator(queryset=UserAuthority.objects.all())])
+    user = serializers.CharField(required=False)
     user_detail = BriefUser(many=False,required=False,read_only=True,source='user')
     department = serializers.CharField(required=True)
     position = serializers.CharField(required=False)
     status_title = serializers.CharField(read_only=True,source='status')
     status_item = serializers.IntegerField(required=False,write_only=True,source='status')
     factory = FactorySerilizer(read_only=True,required=False,source='department.factory')
+    is_active = serializers.BooleanField(required=False)
 
     class Meta:
         model = UserAuthority
-        fields = ['id', 'user','user_detail', 'department', 'position','status','status_title','factory','status_item']
+        fields = ['id', 'user','user_detail', 'department', 'position','status','status_title','factory','status_item','is_active']
 
     def create(self, validate_data):
         validate_data['user'] = User.objects.get(id=int(validate_data['user']))

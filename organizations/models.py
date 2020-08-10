@@ -11,11 +11,11 @@ class Status(models.Model):
         return self.title
 
 class WorkingArea(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=255, null=True, blank=True,unique=True)
     en_title = models.CharField(max_length=255, null=True, blank=True,unique=True)
     text = RichTextUploadingField(blank=True, null=True)
-    status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.ForeignKey(Status, on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now_add=True)
     sort = models.IntegerField(null=True, blank=True)
@@ -30,11 +30,11 @@ class WorkingArea(models.Model):
         return self.title
 
 class OrganizationSize(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=255, null=True, blank=True,unique=True)
     en_title = models.CharField(max_length=255, null=True, blank=True,unique=True)
     sort = models.IntegerField(null=True, blank=True)
-    status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.ForeignKey(Status, on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now_add=True)
 
@@ -47,9 +47,9 @@ class OrganizationSize(models.Model):
 
 
 class Organization(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='owner')
-    size = models.ForeignKey(OrganizationSize, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='owner')
+    size = models.ForeignKey(OrganizationSize, on_delete=models.CASCADE, null=True, blank=True)
     working_area = models.ManyToManyField(WorkingArea, blank=True)
     title = models.CharField(max_length=255, null=True, blank=True,unique=True)
     en_title = models.CharField(max_length=255, null=True, blank=True,unique=True)
@@ -60,7 +60,7 @@ class Organization(models.Model):
     description = models.CharField(max_length=255, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
     phone = models.TextField(null=True, blank=True)
-    status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.ForeignKey(Status, on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now_add=True)
     index = models.BooleanField(default=False)
@@ -77,10 +77,10 @@ class Organization(models.Model):
 
 
 class Factory(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='factoryowner')
-    organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True, blank=True,related_name='userresume')
-    size = models.ForeignKey(OrganizationSize, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='factoryowner')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True,related_name='userresume')
+    size = models.ForeignKey(OrganizationSize, on_delete=models.CASCADE, null=True, blank=True)
     working_area = models.ManyToManyField(WorkingArea, blank=True)
     title = models.CharField(max_length=255, null=True, blank=True)
     en_title = models.CharField(max_length=255, null=True, blank=True,unique=True)
@@ -91,7 +91,7 @@ class Factory(models.Model):
     description = models.CharField(max_length=255, null=True, blank=True)
     address = models.TextField(null=True, blank=True)
     phone = models.TextField(null=True, blank=True)
-    status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.ForeignKey(Status, on_delete=models.CASCADE, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     updated_at = models.DateTimeField(auto_now_add=True)
     index = models.BooleanField(default=False)
@@ -113,21 +113,21 @@ class Factory(models.Model):
         return self.title + "("+ self.organization.title + ")"
 
 class RelationType(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=255, unique=True)
     order = models.IntegerField()
-    opposite_title = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True)
+    opposite_title = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.title
 
 class Relation(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='relowner')
-    source = models.ForeignKey(Factory,related_name='source',on_delete=models.SET_NULL,null=True)
-    target = models.ForeignKey(Factory,related_name='target',on_delete=models.SET_NULL,null=True)
-    type = models.ForeignKey(RelationType,on_delete=models.SET_NULL,null=True)
-    status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='relowner')
+    source = models.ForeignKey(Factory,related_name='source',on_delete=models.CASCADE,null=True)
+    target = models.ForeignKey(Factory,related_name='target',on_delete=models.CASCADE,null=True)
+    type = models.ForeignKey(RelationType,on_delete=models.CASCADE,null=True)
+    status = models.ForeignKey(Status, on_delete=models.CASCADE, null=True, blank=True)
 
 
     class Meta:
@@ -135,11 +135,11 @@ class Relation(models.Model):
 
 
 class Department(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='depowner')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='depowner')
     title = models.CharField(max_length=255,blank=True,null=True)
-    factory = models.ForeignKey(Factory, on_delete=models.SET_NULL, null=True, blank=True)
-    status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
+    factory = models.ForeignKey(Factory, on_delete=models.CASCADE, null=True, blank=True)
+    status = models.ForeignKey(Status, on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         unique_together = ['factory', 'title',]
@@ -149,14 +149,14 @@ class Department(models.Model):
 
 class Category(models.Model):
     title = models.CharField(max_length=255,unique=True)
-    factory = models.ForeignKey(Factory, on_delete=models.SET_NULL, null=True, blank=True)
+    factory = models.ForeignKey(Factory, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return str(self.title)
 
 class Area(models.Model):
     title = models.CharField(max_length=255, unique=True)
-    factory = models.ForeignKey(Factory, on_delete=models.SET_NULL, null=True, blank=True)
+    factory = models.ForeignKey(Factory, on_delete=models.CASCADE, null=True, blank=True)
     class Meta:
         unique_together = ['factory', 'title',]
 
@@ -165,7 +165,7 @@ class Area(models.Model):
 
 class Part(models.Model):
     title = models.CharField(max_length=255, unique=True)
-    area = models.ForeignKey(Area, on_delete=models.SET_NULL, null=True, blank=True)
+    area = models.ForeignKey(Area, on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         unique_together = ['area', 'title',]
@@ -176,7 +176,7 @@ class Part(models.Model):
 
 class Position(models.Model):
     title = models.CharField(max_length=255,)
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return str(self.title)
@@ -185,20 +185,22 @@ class Position(models.Model):
 
 
 class UserAuthority(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
-    position = models.ForeignKey(Position, on_delete=models.SET_NULL, null=True, blank=True)
-    status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True)
+    position = models.ForeignKey(Position, on_delete=models.CASCADE, null=True, blank=True)
+    status = models.ForeignKey(Status, on_delete=models.CASCADE, null=True, blank=True)
+    is_active = models.BooleanField(default=False)
+    
 
     def __str__(self):
         return str(self.user.mobile)
 
 
 class AdminGroup(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='adminowner')
-    factory = models.OneToOneField(Factory, on_delete=models.SET_NULL, null=True, blank=True)
-    status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='adminowner')
+    factory = models.OneToOneField(Factory, on_delete=models.CASCADE, null=True, blank=True)
+    status = models.ForeignKey(Status, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return str(self.factory)
@@ -207,8 +209,8 @@ class AdminGroup(models.Model):
 
 class AdminUser(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    admin_group = models.ForeignKey(AdminGroup, on_delete=models.SET_NULL, null=True, blank=True,related_name='admin_user')
-    status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True, blank=True)
+    admin_group = models.ForeignKey(AdminGroup, on_delete=models.CASCADE, null=True, blank=True,related_name='admin_user')
+    status = models.ForeignKey(Status, on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         unique_together = ['user', 'admin_group', ]
