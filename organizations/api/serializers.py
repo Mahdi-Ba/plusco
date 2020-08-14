@@ -69,31 +69,45 @@ class StatusSerilizer(serializers.ModelSerializer):
 class DepartmentMemberSerilizer(serializers.ModelSerializer):
     user = serializers.CharField(required=False)
     user_detail = BriefUser(many=False, required=False, read_only=True, source='user')
-    department = serializers.CharField(required=True)
+    department = serializers.CharField(required=False)
     position = serializers.CharField(required=False)
     status_title = serializers.CharField(read_only=True, source='status')
     status_item = serializers.IntegerField(required=False, write_only=True, source='status')
     factory = FactorySerilizer(read_only=True, required=False, source='department.factory')
     is_active = serializers.BooleanField(required=False)
+    name = serializers.CharField(required=False)
+    family = serializers.CharField(required=False)
+    national_code = serializers.CharField(required=False)
+    email = serializers.EmailField(required=False)
+    phone = serializers.CharField(required=False)
+    education = serializers.CharField(required=False)
 
     class Meta:
         model = UserAuthority
         fields = ['id', 'user', 'user_detail', 'department', 'position', 'status', 'status_title', 'factory',
-                  'status_item', 'is_active']
+                  'status_item', 'is_active', 'name', 'family', 'national_code', 'email', 'phone', 'education',
+                  ]
 
     def create(self, validate_data):
         validate_data['user'] = User.objects.get(id=int(validate_data['user']))
         validate_data['department'] = Department.objects.get(pk=validate_data['department'])
+        if validate_data.get('position', False):
+            validate_data['position'] = Position.objects.get(pk=validate_data['position'])
         data = UserAuthority.objects.create(**validate_data)
         return data
 
     def update(self, instance, validated_data):
         instance.user = instance.user
-        instance.status_id = validated_data['status']
-        instance.department = Department.objects.get(pk=validated_data['department'])
+        if validated_data.get('status', False):
+            instance.status_id = validated_data['status']
         if validated_data.get('position', False):
             instance.position = Position.objects.get(pk=validated_data['position'])
-
+        instance.name = validated_data.get('name', instance.name)
+        instance.family = validated_data.get('family', instance.family)
+        instance.national_code = validated_data.get('national_code', instance.national_code)
+        instance.email = validated_data.get('email', instance.email)
+        instance.phone = validated_data.get('phone', instance.phone)
+        instance.education = validated_data.get('education', instance.education)
         instance.save()
         return instance
 

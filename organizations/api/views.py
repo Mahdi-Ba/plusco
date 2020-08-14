@@ -112,9 +112,32 @@ class DepartmentMemberByAdminView(APIView):
         user = User.objects.filter(mobile=request.data['mobile']).first()
         if user == None:
             user = User.objects.create_user(request.data['mobile'], random.randint(11111, 99999))
-        UserAuthority.objects.filter(department__factory=Department.objects.get(pk=request.data['department']).factory,user__mobile=request.data['mobile']).delete()
-        user_authority=UserAuthority.objects.create(user=user,department_id=request.data['department'],status_id=request.data['status'])
-        return Response(DepartmentMemberSerilizer(user_authority,many=False).data)
+        UserAuthority.objects.filter(department__factory=Department.objects.get(pk=request.data['department']).factory,
+                                     user__mobile=request.data['mobile']).delete()
+        user_authority = UserAuthority.objects.create(user=user, department_id=request.data['department'],
+                                                      status_id=request.data['status'],
+                                                      name=request.data.get('name', None),
+                                                      family=request.data.get('family', None),
+                                                      national_code=request.data.get('national_code', None),
+                                                      email=request.data.get('email', None),
+                                                      phone=request.data.get('phone', None),
+                                                      education=request.data.get('education', None),
+                                                      position_id=request.data.get('position', None),
+
+                                                      )
+        return Response(DepartmentMemberSerilizer(user_authority, many=False).data)
+
+
+class DepartmentSwitchView(APIView):
+    def put(self, request, format=None):
+        authority = UserAuthority.objects.get(pk=request.data['member_id'], user=request.user)
+        for item in UserAuthority.objects.filter(user=request.user).all():
+            item.is_active = False
+            item.save()
+        authority.is_active = True
+        authority.save()
+        serilizer = DepartmentMemberSerilizer(authority, many=False)
+        return Response(serilizer.data, status=status.HTTP_200_OK)
 
 
 class DepartmentMemberView(APIView):
@@ -127,6 +150,8 @@ class DepartmentMemberView(APIView):
             return Response({"status": False, 'message': "Not Found"}, status=status.HTTP_404_NOT_FOUND)
 
     def post(self, request, format=None):
+        if 'status' in request.data:
+            request.data.pop('status')
         send_notif = False
         dep = Department.objects.get(pk=request.data['department'])
         if UserAuthority.objects.filter(user=request.user, department__factory=dep.factory).exists():
@@ -172,38 +197,17 @@ class DepartmentMemberView(APIView):
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, format=None):
-        authority = UserAuthority.objects.get(pk=request.data['member_id'], user=request.user)
-        for item in UserAuthority.objects.filter(user=request.user).all():
-            item.is_active = False
-            item.save()
-        authority.is_active = True
-        authority.save()
-        serilizer = DepartmentMemberSerilizer(authority, many=False)
-        return Response(serilizer.data, status=status.HTTP_200_OK)
-        # if dep.factory.owner == request.user or\
-        #         (UserAuthority.objects.get(user=request.user).department.factory == dep.factory and UserAuthority.objects.get(user=request.user).status_id == 1):
-        #     status_id = 1
-        # else:
-        #     send_notif = True
-        #     admin_group = AdminGroup.objects.get(factory=Department.objects.get(pk=request.data['department']).factory)
-        #     user_ids = AdminUser.objects.filter(admin_group=admin_group).all().values_list('user_id',flat=True)
-        #     device = FCMDevice.objects.filter(user_id__in=user_ids).all()
-        #     payload = {
-        #         "type": "accept-user",
-        #         "priority": "high",
-        #         "click_action": "FLUTTER_NOTIFICATION_CLICK"
-        #     }
-        #     status_id = 2
-        #
-        # authority = UserAuthority.objects.get(user=request.user)
-        # request.data['status_item'] = status_id
-        # data = DepartmentMemberSerilizer(authority, data=request.data)
-        # if data.is_valid():
-        #     instance = data.save()
-        #     if send_notif == True:
-        #         device.send_message(title='تقاضای عضویت', body='یک در خواست جدید عضویت ثبت شد', data=payload)
-        #     return Response(data.data, status=status.HTTP_200_OK)
-        # return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
+        if UserAuthority.objects.filter(id=request.data['member_id'],user=request.user).first() == None:
+            return Response({'success':False,'message':'دسترسی ندارد'},status=status.HTTP_403_FORBIDDEN)
+        if 'status' in request.data:
+            request.data.pop('status')
+
+        authority = UserAuthority.objects.get(id=request.data['member_id'])
+        data = DepartmentMemberSerilizer(authority, data=request.data)
+        if data.is_valid():
+            instance = data.save()
+            return Response(data.data, status=status.HTTP_200_OK)
+        return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class NewRequestAuthorityMember(APIView):

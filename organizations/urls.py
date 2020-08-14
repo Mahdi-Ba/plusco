@@ -14,6 +14,7 @@ urlpatterns = [
     path('factory/members', views.FactoryMembersView.as_view(), name=None),
     path('department/member/admin', views.DepartmentMemberByAdminView.as_view(), name=None),
     path('department/member', views.DepartmentMemberView.as_view(), name=None),
+    path('switch/department/', views.DepartmentSwitchView.as_view(), name=None),
     path('department/member/follower', views.NewRequestAuthorityMember.as_view(), name=None),
     path('department/<int:pk>/position', views.DepartmentPositioView.as_view(), name=None),
     path('factory/<int:pk>/area', views.FactoryAreaView.as_view(), name=None),

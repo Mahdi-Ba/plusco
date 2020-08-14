@@ -190,7 +190,13 @@ class UserAuthority(models.Model):
     position = models.ForeignKey(Position, on_delete=models.CASCADE, null=True, blank=True)
     status = models.ForeignKey(Status, on_delete=models.CASCADE, null=True, blank=True)
     is_active = models.BooleanField(default=False)
-    
+    name = models.CharField(null=True, blank=True,max_length=255)
+    family = models.CharField(null=True, blank=True,max_length=255)
+    national_code = models.CharField(null=True, blank=True,max_length=50)
+    email = models.EmailField(null=True, blank=True)
+    phone = models.CharField(null=True, blank=True,max_length=40)
+    education = models.CharField(null=True, blank=True,max_length=255)
+
 
     def __str__(self):
         return str(self.user.mobile)
