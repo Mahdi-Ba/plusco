@@ -177,7 +177,7 @@ class DepartmentAdmin(admin.ModelAdmin):
 
 @admin.register(UserAuthority)
 class UserAuthorityAdmin(admin.ModelAdmin):
-    list_display = ['user', 'department', 'status']
+    list_display = ['user', 'department', 'status','is_active']
     search_fields = ['user', ]
     # readonly_fields = ['user','department']
     list_filter = ['status']

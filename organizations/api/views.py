@@ -1,4 +1,5 @@
 import base64
+import random
 import uuid
 from dbm import error
 
@@ -49,7 +50,7 @@ class FactoryView(APIView):
             factory = data.save(owner=request.user)
             admin_group = AdminGroup.objects.create(owner=request.user, factory=factory)
             AdminUser.objects.create(user=request.user, admin_group=admin_group)
-            Department.objects.create(owner=request.user,title="HSC",factory=factory)
+            Department.objects.create(owner=request.user, title="HSC", factory=factory)
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -66,6 +67,13 @@ class DepartmentView(APIView):
             data.save(owner=request.user)
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request, format=None):
+        department = Department.objects.filter(
+            factory=UserAuthority.objects.get(user=request.user, status_id=1, is_active=True).department.factory
+        ).all()
+        serilizer = DepartmentSerilizer(department, many=True)
+        return Response(serilizer.data)
 
 
 class DepartmentPositioView(APIView):
@@ -84,19 +92,36 @@ class StatusView(APIView):
 
 class FactoryMembersView(APIView):
     def get(self, request, format=None):
-        factory = UserAuthority.objects.get(user=request.user).department.factory
-        users = UserAuthority.objects.filter(department__factory=factory,status=1).all()
+        factory = UserAuthority.objects.get(user=request.user, is_active=True).department.factory
+        users = UserAuthority.objects.filter(department__factory=factory, status=1).all()
         if users:
             authority = DepartmentMemberSerilizer(users, many=True)
             return Response(authority.data, status=status.HTTP_200_OK)
         else:
             return Response({"status": False, 'message': "Not Found"}, status=status.HTTP_404_NOT_FOUND)
 
+
+class DepartmentMemberByAdminView(APIView):
+    def post(self, request, format=None):
+        factory = UserAuthority.objects.get(user=request.user, status_id=1, is_active=True).department.factory
+        if Department.objects.get(pk=request.data['department']).factory != factory:
+            return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+        admin_group = AdminGroup.objects.get(factory=factory)
+        if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+            return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+        user = User.objects.filter(mobile=request.data['mobile']).first()
+        if user == None:
+            user = User.objects.create_user(request.data['mobile'], random.randint(11111, 99999))
+        UserAuthority.objects.filter(department__factory=Department.objects.get(pk=request.data['department']).factory,user__mobile=request.data['mobile']).delete()
+        user_authority=UserAuthority.objects.create(user=user,department_id=request.data['department'],status_id=request.data['status'])
+        return Response(DepartmentMemberSerilizer(user_authority,many=False).data)
+
+
 class DepartmentMemberView(APIView):
     def get(self, request, format=None):
         if UserAuthority.objects.filter(user=request.user).exists():
-            authority = UserAuthority.objects.get(user=request.user)
-            authority = DepartmentMemberSerilizer(authority, many=False)
+            authority = UserAuthority.objects.filter(user=request.user).all()
+            authority = DepartmentMemberSerilizer(authority, many=True)
             return Response(authority.data, status=status.HTTP_200_OK)
         else:
             return Response({"status": False, 'message': "Not Found"}, status=status.HTTP_404_NOT_FOUND)
@@ -104,73 +129,102 @@ class DepartmentMemberView(APIView):
     def post(self, request, format=None):
         send_notif = False
         dep = Department.objects.get(pk=request.data['department'])
+        if UserAuthority.objects.filter(user=request.user, department__factory=dep.factory).exists():
+            if UserAuthority.objects.filter(user=request.user,
+                                            department__factory=dep.factory).first().department.factory == dep.factory:
+                authority = UserAuthority.objects.filter(user=request.user, department__factory=dep.factory).first()
+                if authority.status_id != 1:
+                    send_notif = True
+
+                status_id = authority.status_id
+                authority.delete()
+                for item in UserAuthority.objects.filter(user=request.user, is_active=True).all():
+                    item.is_active = False
+                    item.save()
+                is_active = True
+
         if dep.factory.owner == request.user:
+            for item in UserAuthority.objects.filter(user=request.user, is_active=True).all():
+                item.is_active = False
+                item.save()
             status_id = 1
-        else:
-            send_notif = True
+            is_active = True
+
+        if send_notif == True:
+            status_id = 2
             admin_group = AdminGroup.objects.get(factory=Department.objects.get(pk=request.data['department']).factory)
-            user_ids = AdminUser.objects.filter(admin_group=admin_group).all().values_list('user_id',flat=True)
+            user_ids = AdminUser.objects.filter(admin_group=admin_group).all().values_list('user_id', flat=True)
             device = FCMDevice.objects.filter(user_id__in=user_ids).all()
             payload = {
                 "type": "accept-user",
                 "priority": "high",
                 "click_action": "FLUTTER_NOTIFICATION_CLICK"
             }
-            status_id = 2
+            is_active = False
+
         request.data['user'] = str(request.user.id)
         data = DepartmentMemberSerilizer(data=request.data)
         if data.is_valid():
-            data.save(status=Status.objects.get(pk=status_id))
+            data.save(status=Status.objects.get(pk=status_id), is_active=is_active)
             if send_notif == True:
                 device.send_message(title='تقاضای عضویت', body='یک در خواست جدید عضویت ثبت شد', data=payload)
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, format=None):
-        send_notif = False
-        dep = Department.objects.get(pk=request.data['department'])
-        if dep.factory.owner == request.user or\
-                (UserAuthority.objects.get(user=request.user).department.factory == dep.factory and UserAuthority.objects.get(user=request.user).status_id == 1):
-            status_id = 1
-        else:
-            send_notif = True
-            admin_group = AdminGroup.objects.get(factory=Department.objects.get(pk=request.data['department']).factory)
-            user_ids = AdminUser.objects.filter(admin_group=admin_group).all().values_list('user_id',flat=True)
-            device = FCMDevice.objects.filter(user_id__in=user_ids).all()
-            payload = {
-                "type": "accept-user",
-                "priority": "high",
-                "click_action": "FLUTTER_NOTIFICATION_CLICK"
-            }
-            status_id = 2
-
-        authority = UserAuthority.objects.get(user=request.user)
-        request.data['status_item'] = status_id
-        data = DepartmentMemberSerilizer(authority, data=request.data)
-        if data.is_valid():
-            instance = data.save()
-            if send_notif == True:
-                device.send_message(title='تقاضای عضویت', body='یک در خواست جدید عضویت ثبت شد', data=payload)
-            return Response(data.data, status=status.HTTP_200_OK)
-        return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
+        authority = UserAuthority.objects.get(pk=request.data['member_id'], user=request.user)
+        for item in UserAuthority.objects.filter(user=request.user).all():
+            item.is_active = False
+            item.save()
+        authority.is_active = True
+        authority.save()
+        serilizer = DepartmentMemberSerilizer(authority, many=False)
+        return Response(serilizer.data, status=status.HTTP_200_OK)
+        # if dep.factory.owner == request.user or\
+        #         (UserAuthority.objects.get(user=request.user).department.factory == dep.factory and UserAuthority.objects.get(user=request.user).status_id == 1):
+        #     status_id = 1
+        # else:
+        #     send_notif = True
+        #     admin_group = AdminGroup.objects.get(factory=Department.objects.get(pk=request.data['department']).factory)
+        #     user_ids = AdminUser.objects.filter(admin_group=admin_group).all().values_list('user_id',flat=True)
+        #     device = FCMDevice.objects.filter(user_id__in=user_ids).all()
+        #     payload = {
+        #         "type": "accept-user",
+        #         "priority": "high",
+        #         "click_action": "FLUTTER_NOTIFICATION_CLICK"
+        #     }
+        #     status_id = 2
+        #
+        # authority = UserAuthority.objects.get(user=request.user)
+        # request.data['status_item'] = status_id
+        # data = DepartmentMemberSerilizer(authority, data=request.data)
+        # if data.is_valid():
+        #     instance = data.save()
+        #     if send_notif == True:
+        #         device.send_message(title='تقاضای عضویت', body='یک در خواست جدید عضویت ثبت شد', data=payload)
+        #     return Response(data.data, status=status.HTTP_200_OK)
+        # return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class NewRequestAuthorityMember(APIView):
     def get(self, request, format=None):
-        admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=request.user).department.factory)
+        admin_group = AdminGroup.objects.get(
+            factory=UserAuthority.objects.get(user=request.user, status_id=1, is_active=True).department.factory)
         if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         else:
-            new_user = UserAuthority.objects.filter(department=UserAuthority.objects.get(user=request.user).department,
-                                                    status=2).all()
+            new_user = UserAuthority.objects.filter(
+                department=UserAuthority.objects.get(user=request.user, is_active=True).department,
+                status=2).all()
             return Response(DepartmentMemberSerilizer(new_user, many=True).data)
 
     def post(self, request, format=None):
-        admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=request.user).department.factory)
+        admin_group = AdminGroup.objects.get(
+            factory=UserAuthority.objects.get(user=request.user, status_id=1, is_active=True).department.factory)
         if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         else:
-            user =User.objects.get(mobile__exact=request.data['mobile'])
+            user = User.objects.get(mobile__exact=request.data['mobile'])
             if admin_group.owner.id == user.id:
                 return Response({"status": False, 'message': 'مالک کارگاه'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -179,22 +233,21 @@ class NewRequestAuthorityMember(APIView):
             payload = {
                 "type": "get-accept-state",
                 "priority": "high",
-                "state":request.data['active'],
+                "state": request.data['active'],
                 "click_action": "FLUTTER_NOTIFICATION_CLICK"
             }
             device.send_message(title='بررسی درخواست ورود', body='درخواست شما بررسی شد', data=payload)
             if request.data['active'] == 1:
                 user_authority.status_id = 1
                 user_authority.save()
-                return Response({'status':True,'message':'فعال شد'})
+                return Response({'status': True, 'message': 'فعال شد'})
             else:
-                admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=user_authority).department.factory)
-                if AdminUser.objects.filter(admin_group=admin_group, user=user_authority).exists():
-                    AdminUser.objects.get(admin_group=admin_group, user=user_authority).delete()
+                admin_group = AdminGroup.objects.get(
+                    factory=UserAuthority.objects.get(id=request.data['id']).department.factory)
+                if AdminUser.objects.filter(admin_group=admin_group, user=user_authority.user).exists():
+                    AdminUser.objects.get(admin_group=admin_group, user=user_authority.user).delete()
                 user_authority.delete()
-                return Response({'status':True,'message':'حذف شد'})
-
-
+                return Response({'status': True, 'message': 'حذف شد'})
 
 
 class FactoryDepartmentView(APIView):
@@ -236,14 +289,15 @@ class RelationTypeView(APIView):
 
 class AdminView(APIView):
     def get(self, request, format=None):
-        admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=request.user).department.factory)
+        admin_group = AdminGroup.objects.get(
+            factory=UserAuthority.objects.get(user=request.user, is_active=True).department.factory)
         serilizer = AdminGroupSerilizer(admin_group, many=False)
         return Response(serilizer.data)
 
     def post(self, request, format=None):
         try:
             admin_group = AdminGroup.objects.get(
-                factory=UserAuthority.objects.get(user=request.user).department.factory)
+                factory=UserAuthority.objects.get(user=request.user, is_active=True).department.factory)
             user = User.objects.get(mobile__exact=request.data['mobile'])
             if not AdminUser.objects.filter(user=user, admin_group=admin_group).exists():
                 AdminUser.objects.create(user=user, admin_group=admin_group)
@@ -254,50 +308,51 @@ class AdminView(APIView):
 
     def delete(self, request, format=None):
         admin_group = AdminGroup.objects.get(
-            factory=UserAuthority.objects.get(user=request.user).department.factory)
+            factory=UserAuthority.objects.get(user=request.user, is_active=True).department.factory)
         user = User.objects.get(mobile__exact=request.data['mobile'])
         if admin_group.owner.id == user.id:
             return Response({'status': False, "message": "مالک کارگاه"}, status=status.HTTP_400_BAD_REQUEST)
         if AdminUser.objects.filter(user=user, admin_group=admin_group).exists():
             AdminUser.objects.get(user=user, admin_group=admin_group).delete()
-            return Response({'status':True,"message":"با موفقیت پاک شد"})
-        return Response({'status':False,"message":"یافت نشد"},status=status.HTTP_404_NOT_FOUND)
+            return Response({'status': True, "message": "با موفقیت پاک شد"})
+        return Response({'status': False, "message": "یافت نشد"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class RelationView(APIView):
     def get(self, request, format=None):
-        authority = UserAuthority.objects.get(user=request.user)
-        relation = Relation.objects.filter(source=authority.department.factory.id,status_id=1)
+        authority = UserAuthority.objects.get(user=request.user, is_active=True)
+        relation = Relation.objects.filter(source=authority.department.factory.id, status_id=1)
         serializers = RelationSerilizer(relation, many=True)
         return Response(serializers.data)
 
     def delete(self, request):
-        admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=request.user).department.factory)
+        admin_group = AdminGroup.objects.get(
+            factory=UserAuthority.objects.get(user=request.user, status_id=1, is_active=True).department.factory)
         if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         if Relation.objects.filter(pk=request.GET['id']).exists():
             relation_obj = Relation.objects.get(pk=request.GET['id'])
-            Relation.objects.get(source=relation_obj.target,target=relation_obj.source).delete()
+            Relation.objects.get(source=relation_obj.target, target=relation_obj.source).delete()
             relation_obj.delete()
             return Response({'status': True, 'message': "Deleted"})
         return Response({"status": False, "message": "NOT FOUND"}, status=status.HTTP_404_NOT_FOUND)
 
     def post(self, request, format=None):
-        admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=request.user).department.factory)
+        admin_group = AdminGroup.objects.get(
+            factory=UserAuthority.objects.get(user=request.user, status_id=1, is_active=True).department.factory)
         if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
 
-
-
-        authority = UserAuthority.objects.get(user=request.user)
+        authority = UserAuthority.objects.get(user=request.user, is_active=True)
         request.data['source'] = str(authority.department.factory.id)
         data = RelationSerilizer(data=request.data)
         if data.is_valid():
-            instance = data.save(owner=request.user,status_id=2)
+            instance = data.save(owner=request.user, status_id=2)
             Relation.objects.create(source=instance.target, target=instance.source,
-                                    type=RelationType.objects.get(id=request.data['type']).opposite_title,status_id=2)
+                                    type=RelationType.objects.get(id=request.data['type']).opposite_title, status_id=2)
             admin_user = AdminUser.objects.filter(
-                admin_group=AdminGroup.objects.get(factory_id=request.data['target'])).all().values_list('user_id',flat=True)
+                admin_group=AdminGroup.objects.get(factory_id=request.data['target'])).all().values_list('user_id',
+                                                                                                         flat=True)
             device = FCMDevice.objects.filter(user_id__in=admin_user).all()
             payload = {
                 "type": "accept-relation",
@@ -308,21 +363,24 @@ class RelationView(APIView):
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class NewRelationView(APIView):
     def get(self, request, format=None):
-        admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=request.user).department.factory)
+        admin_group = AdminGroup.objects.get(
+            factory=UserAuthority.objects.get(user=request.user, status_id=1, is_active=True).department.factory)
         if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
-        authority = UserAuthority.objects.get(user=request.user)
-        relation = Relation.objects.filter(source=authority.department.factory.id,status_id=2)
+        authority = UserAuthority.objects.get(user=request.user, is_active=True)
+        relation = Relation.objects.filter(source=authority.department.factory.id, status_id=2)
         serializers = RelationSerilizer(relation, many=True)
         return Response(serializers.data)
 
     def post(self, request, format=None):
-        admin_group = AdminGroup.objects.get(factory=UserAuthority.objects.get(user=request.user).department.factory)
+        admin_group = AdminGroup.objects.get(
+            factory=UserAuthority.objects.get(user=request.user, status_id=1, is_active=True).department.factory)
         if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
-        if not Relation.objects.filter(pk=request.data['id'],owner=None).exists():
+        if not Relation.objects.filter(pk=request.data['id'], owner=None).exists():
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         else:
             relation = Relation.objects.get(pk=request.data['id'], owner=None)
@@ -333,9 +391,6 @@ class NewRelationView(APIView):
             reverce_relation.status_id = 1
             reverce_relation.save()
             return Response({"status": True, 'message': 'ارتباط با ذی نفع مورد نظر برقرار شد'})
-
-
-
 
 
 class PartView(APIView):

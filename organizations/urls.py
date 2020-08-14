@@ -12,6 +12,7 @@ urlpatterns = [
     path('department/', views.DepartmentView.as_view(), name=None),
     path('status/member', views.StatusView.as_view(), name=None),
     path('factory/members', views.FactoryMembersView.as_view(), name=None),
+    path('department/member/admin', views.DepartmentMemberByAdminView.as_view(), name=None),
     path('department/member', views.DepartmentMemberView.as_view(), name=None),
     path('department/member/follower', views.NewRequestAuthorityMember.as_view(), name=None),
     path('department/<int:pk>/position', views.DepartmentPositioView.as_view(), name=None),

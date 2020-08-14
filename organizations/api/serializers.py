@@ -14,18 +14,18 @@ class OrgSerilizer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ['id', 'title','image']
+        fields = ['id', 'title', 'image']
 
 
 class FactorySerilizer(serializers.ModelSerializer):
-    owner = BriefUser(many=False,required=False,read_only=True)
+    owner = BriefUser(many=False, required=False, read_only=True)
     title = serializers.CharField(max_length=255, required=True)
     organization = serializers.CharField()
-    org_image = serializers.ImageField(source='organization.image',required=False,read_only=True)
+    org_image = serializers.ImageField(source='organization.image', required=False, read_only=True)
 
     class Meta:
         model = Factory
-        fields = ['id', 'owner','title', 'organization','org_image']
+        fields = ['id', 'owner', 'title', 'organization', 'org_image']
         validators = [
             UniqueTogetherValidator(
                 queryset=Factory.objects.all(),
@@ -66,20 +66,20 @@ class StatusSerilizer(serializers.ModelSerializer):
         fields = ['id', 'title']
 
 
-
 class DepartmentMemberSerilizer(serializers.ModelSerializer):
     user = serializers.CharField(required=False)
-    user_detail = BriefUser(many=False,required=False,read_only=True,source='user')
+    user_detail = BriefUser(many=False, required=False, read_only=True, source='user')
     department = serializers.CharField(required=True)
     position = serializers.CharField(required=False)
-    status_title = serializers.CharField(read_only=True,source='status')
-    status_item = serializers.IntegerField(required=False,write_only=True,source='status')
-    factory = FactorySerilizer(read_only=True,required=False,source='department.factory')
+    status_title = serializers.CharField(read_only=True, source='status')
+    status_item = serializers.IntegerField(required=False, write_only=True, source='status')
+    factory = FactorySerilizer(read_only=True, required=False, source='department.factory')
     is_active = serializers.BooleanField(required=False)
 
     class Meta:
         model = UserAuthority
-        fields = ['id', 'user','user_detail', 'department', 'position','status','status_title','factory','status_item','is_active']
+        fields = ['id', 'user', 'user_detail', 'department', 'position', 'status', 'status_title', 'factory',
+                  'status_item', 'is_active']
 
     def create(self, validate_data):
         validate_data['user'] = User.objects.get(id=int(validate_data['user']))
@@ -162,29 +162,28 @@ class PositionSerilizer(serializers.ModelSerializer):
 class RelationTypeSerilizer(serializers.ModelSerializer):
     class Meta:
         model = RelationType
-        fields = ['id','title',]
+        fields = ['id', 'title', ]
 
 
 class RelationSerilizer(serializers.ModelSerializer):
-    owner = BriefUser(many=False,required=False,read_only=True)
+    owner = BriefUser(many=False, required=False, read_only=True)
     source = serializers.CharField(write_only=True)
     target = serializers.CharField(write_only=True)
-    source_factory =  FactorySerilizer(source='source', read_only=True)
+    source_factory = FactorySerilizer(source='source', read_only=True)
     target_factory = FactorySerilizer(source='target', read_only=True)
     type = serializers.CharField()
-    status_title = serializers.CharField(read_only=True,source='status')
-
+    status_title = serializers.CharField(read_only=True, source='status')
 
     class Meta:
         model = Relation
-        fields = ['id', 'owner', 'source', 'target', 'type', 'source_factory', 'target_factory','status','status_title']
+        fields = ['id', 'owner', 'source', 'target', 'type', 'source_factory', 'target_factory', 'status',
+                  'status_title']
         validators = [
             UniqueTogetherValidator(
                 queryset=Relation.objects.all(),
                 fields=['source', 'target']
             )
         ]
-
 
     def create(self, validate_data):
         validate_data['source'] = Factory.objects.get(pk=int(validate_data['source']))
@@ -193,22 +192,21 @@ class RelationSerilizer(serializers.ModelSerializer):
         data = Relation.objects.create(**validate_data)
         return data
 
+
 class AdminUserSerilizer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.mobile')
-    user_detail = BriefUser(many=False,required=False,read_only=True,source='user')
+    user_detail = BriefUser(many=False, required=False, read_only=True, source='user')
 
     class Meta:
         model = AdminUser
-        fields = ['user','user_detail' ]
+        fields = ['user', 'user_detail']
 
 
 class AdminGroupSerilizer(serializers.ModelSerializer):
-    owner_detail = BriefUser(many=False,required=False,read_only=True,source='owner')
+    owner_detail = BriefUser(many=False, required=False, read_only=True, source='owner')
     owner = serializers.ReadOnlyField(source='owner.mobile')
     admin_user = AdminUserSerilizer(read_only=True, many=True)
 
-
     class Meta:
         model = AdminGroup
-        fields = ['owner','admin_user','owner_detail']
-
+        fields = ['owner', 'admin_user', 'owner_detail']
