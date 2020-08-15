@@ -11,10 +11,13 @@ class OrgSerilizer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=True,
                                   validators=[UniqueValidator(queryset=Organization.objects.all())])
     image = serializers.FileField(required=False)
+    province = serializers.CharField(max_length=255, required=False)
+    city = serializers.CharField(max_length=255, required=False)
+    phone = serializers.CharField(max_length=255, required=False)
 
     class Meta:
         model = Organization
-        fields = ['id', 'title', 'image']
+        fields = ['id', 'title', 'image', 'province', 'city', 'phone']
 
 
 class FactorySerilizer(serializers.ModelSerializer):
@@ -22,10 +25,17 @@ class FactorySerilizer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=True)
     organization = serializers.CharField()
     org_image = serializers.ImageField(source='organization.image', required=False, read_only=True)
+    province = serializers.CharField(max_length=255, required=False)
+    city = serializers.CharField(max_length=255, required=False)
+    address = serializers.CharField(required=False)
+    phone = serializers.CharField(max_length=255, required=False)
+    rel_phone = serializers.CharField(max_length=255, required=False)
 
     class Meta:
         model = Factory
-        fields = ['id', 'owner', 'title', 'organization', 'org_image']
+        fields = ['id', 'owner', 'title', 'organization', 'org_image', 'province', 'city', 'address', 'phone',
+                  'rel_phone',
+                  ]
         validators = [
             UniqueTogetherValidator(
                 queryset=Factory.objects.all(),
