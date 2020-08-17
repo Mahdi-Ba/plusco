@@ -73,7 +73,7 @@ class Action(models.Model):
     #                                        related_name='execute_dep')
     # owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,related_name='action_owner')
     # owner_factory = models.ForeignKey(Factory, on_delete=models.CASCADE, null=True, blank=True)
-    conformity = models.ForeignKey(Conformity, on_delete=models.CASCADE, null=True, blank=True, related_name='action')
+    conformity = models.OneToOneField(Conformity, on_delete=models.CASCADE, null=True, blank=True, related_name='action')
     title = models.CharField(max_length=255, blank=True, null=True)
     # text = models.TextField(blank=True, null=True)
     reply_text = models.TextField(blank=True, null=True)
