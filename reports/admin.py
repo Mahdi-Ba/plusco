@@ -16,37 +16,51 @@ class ActionStatusAdmin(admin.ModelAdmin):
     search_fields = ['title']
 
 
+class ConformityModel(admin.TabularInline):
+    model = Conformity
+    extra = 1
+
+
+@admin.register(Inspection)
+class InspectionAdmin(admin.ModelAdmin):
+    inlines = [ConformityModel]
+    list_display = ['title','owner','owner_factory','receiver_factory','is_archive',]
+    search_fields = ['title']
+    list_filter = ['is_archive',]
+
+
+
 
 class ConformityGalleryModel(admin.TabularInline):
     model = ConformityGallery
     extra = 1
 
+
 class ActionGalleryModel(admin.TabularInline):
     model = ActionGallery
     extra = 1
+
+
 class ActionModel(admin.TabularInline):
     model = Action
     extra = 1
 
+
 @admin.register(Conformity)
 class ConformityAdmin(admin.ModelAdmin):
-    inlines = [ConformityGalleryModel,ActionModel]
+    inlines = [ConformityGalleryModel, ActionModel]
 
     list_display = [
         'text',
-        'owner',
-        'owner_factory',
-        'receiver_factory',
-        'part',
+        'receiver_department',
     ]
-    search_fields = ['owner']
+    search_fields = ['title']
+
     list_filter = ['priority', 'is_conformity']
-    autocomplete_fields = ['owner',
-                           'owner_factory',
-                           'receiver_factory',
-                           'part',
-                           'status'
-                           ]
+    autocomplete_fields = [
+        'receiver_department',
+        'status'
+    ]
 
 
 @admin.register(Action)
@@ -55,28 +69,27 @@ class ActionAdmin(admin.ModelAdmin):
     list_display = [
         'title',
         'conformity',
-        'owner',
-        'owner_factory',
+        'execute_owner',
         # 'followe_status',
         # 'follower_department',
         # 'executiv_status',
-        'execute_department',
+        # 'execute_department',
         'due_date',
 
     ]
     search_fields = ['title']
 
-    autocomplete_fields = ['owner',
-                           'conformity',
-                           'owner_factory',
-                           # 'follower_department',
-                           'execute_department',
-                           # 'followe_status',
-                           # 'executiv_status',
-                           'execute_owner',
-                           # 'follower_owner',
+    autocomplete_fields = [
+        'conformity',
 
-                           ]
+        # 'follower_department',
+        # 'execute_department',
+        # 'followe_status',
+        # 'executiv_status',
+        'execute_owner',
+        # 'follower_owner',
+
+    ]
 
 
 @admin.register(ConformityGallery)
