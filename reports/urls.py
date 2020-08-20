@@ -8,6 +8,10 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 urlpatterns = [
     # path('test', views.UploadView.as_view()),
+    path('inspection/', views.InspectionView.as_view()),
+    path('inspection/<int:pk>', views.InspectionView.as_view()),
+    path('inspection/archive/<int:is_archive>', views.InspectionArchiveView.as_view()),
+    path('inspection/update/<int:pk>', views.InspectionUpdateView.as_view()),
     path('conformity/status/', views.StatusConformityView.as_view()),
     path('conformity/', views.ConformityView.as_view()),
     path('conformity/change/status/<int:pk>', views.ConformityConfirmView.as_view()),
