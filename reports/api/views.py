@@ -108,11 +108,13 @@ class ConformityMyBoardView(APIView, PaginationHandlerMixin):
 
 class ConformityView(APIView):
     def post(self, request, format=None):
+        if Inspection.objects.filter(pk=request.data['inspection'],owner=request.user).count() ==0:
+            return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
         files = request.data.pop('files')
         conformity = ConformitySerilizer(data=request.data)
         if conformity.is_valid():
             authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id=1)
-            conformity_obj = conformity.save(owner=request.user, owner_factory=authority.department.factory)
+            conformity_obj = conformity.save()
             for file in files:
                 format, imgstr = file.split(';base64,')
                 ext = format.split('/')[-1]
@@ -129,7 +131,7 @@ class ConformityView(APIView):
 class ConformityConfirmView(APIView):
     def post(self, request, pk, format=None):
         data = Conformity.objects.get(pk=pk)
-        if data.owner != request.user:
+        if data.inspection.owner != request.user:
             return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
         data.status_id = request.data['status']
         data.save()
@@ -153,21 +155,21 @@ class ActionDetailView(APIView):
 
 class CatchActionView(APIView):
     def post(self, request, format=None):
-        data = Action.objects.get(pk=request.data['action'])
-        if data.execute_owner == None:
-            data.execute_owner = request.user
+        data = Conformity.objects.get(pk=request.data['conformity'])
+        if data.reporter == None:
+            data.reporter = request.user
             data.save()
-        serilizer = ActionSerilizer(data, many=False)
+        serilizer = ConformitySerilizer(data, many=False)
         return Response(serilizer.data)
 
 
 class RejectActionView(APIView):
     def post(self, request, format=None):
-        data = Action.objects.get(pk=request.data['action'])
-        if data.execute_owner != None:
-            data.execute_owner = None
+        data = Conformity.objects.get(pk=request.data['conformity'])
+        if data.reporter != None:
+            data.reporter = None
             data.save()
-        serilizer = ActionSerilizer(data, many=False)
+        serilizer = ConformitySerilizer(data, many=False)
         return Response(serilizer.data)
 
 
@@ -190,27 +192,41 @@ class ActionMyBoardView(APIView, PaginationHandlerMixin):
 
 class ActionView(APIView):
     def post(self, request, format=None):
+        data = Conformity.objects.get(pk=request.data['conformity'])
+        authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id=1)
+        if data.receiver_department != authority.department or data.reporter != request.user:
+            return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
         action = ActionSerilizer(data=request.data)
         if action.is_valid():
-            authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id=1)
-            action_obj = action.save(owner=request.user, owner_factory=authority.department.factory)
-            users = UserAuthority.objects.filter(department_id=request.data['execute_department']).all().values_list(
-                'user_id', flat=True)
-            device = FCMDevice.objects.filter(user_id__in=users).all()
-            data = {
-                "type": "action",
-                "action_id": action_obj.id,
-                "conformity_detail": request.data['conformity'],
-                "priority": "high",
-                "click_action": "FLUTTER_NOTIFICATION_CLICK"
-            }
-            device.send_message(title='اقدام', body='یک اقدام جدید ثبت شد', data=data)
+            action_obj = action.save(execute_owner=request.user)
+            files = request.data.pop('files')
+            for file in files:
+                format, imgstr = file.split(';base64,')
+                ext = format.split('/')[-1]
+                data = ContentFile(base64.b64decode(imgstr), name=str(uuid.uuid4()) + "." + ext)
+                request.data['file'] = data
+                serializer = ActionGallerySerilizer(data=request.data)
+                if serializer.is_valid():
+                    obj = serializer.save(action=action_obj)
+                    obj = serializer.save()
+            # users = UserAuthority.objects.filter(department_id=request.data['execute_department']).all().values_list(
+            #     'user_id', flat=True)
+            # device = FCMDevice.objects.filter(user_id__in=users).all()
+            # data = {
+            #     "type": "action",
+            #     "action_id": action_obj.id,
+            #     "conformity_detail": request.data['conformity'],
+            #     "priority": "high",
+            #     "click_action": "FLUTTER_NOTIFICATION_CLICK"
+            # }
+            # device.send_message(title='اقدام', body='یک اقدام جدید ثبت شد', data=data)
             return Response(action.data, status=status.HTTP_200_OK)
         return Response(action.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ActionReplyView(APIView):
     def post(self, request, format=None):
+        return Response('تست نکنش تموم شده علیرضا')
         action_number = request.data.pop('action')
         if Action.objects.get(pk=action_number).execute_owner != request.user:
             return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
@@ -234,7 +250,7 @@ class ActionReplyView(APIView):
 
 class ActionConfirmView(APIView):
     def post(self, request, pk, format=None):
-        if Action.objects.get(pk=pk).owner != request.user:
+        if Action.objects.get(pk=pk).conformity.reporter != request.user:
             return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
 
         action = Action.objects.get(pk=pk)

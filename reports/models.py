@@ -26,24 +26,27 @@ class Inspection(models.Model):
         return self.title
 
 
-
 class Conformity(models.Model):
-    # is_publish = models.BooleanField(default=True)
-    # publisher = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,related_name='publisher')
-    # category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
     status = models.ForeignKey(Status, on_delete=models.CASCADE, null=True, blank=True)
-    # owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    # owner_factory = models.ForeignKey(Factory, on_delete=models.CASCADE, null=True, blank=True,related_name='owner_factory')
-    # receiver_factory = models.ForeignKey(Factory, on_delete=models.CASCADE, null=True, blank=True)
-    inspection = models.ForeignKey(Inspection, on_delete=models.CASCADE, null=True, blank=True,related_name='conformity')
+    inspection = models.ForeignKey(Inspection, on_delete=models.CASCADE, null=True, blank=True,
+                                   related_name='conformity')
     receiver_department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=255, blank=True, null=True)
     text = models.TextField(blank=True, null=True)
     priority = models.IntegerField(blank=True, null=True)
-    # part = models.ForeignKey(Part, on_delete=models.CASCADE, null=True, blank=True)
     is_conformity = models.BooleanField(default=False)
     date = models.DateField(blank=True, null=True, )
     due_date = models.DateField(null=True, blank=True)
+    reporter = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+
+
+    # is_publish = models.BooleanField(default=True)
+    # publisher = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,related_name='publisher')
+    # category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
+    # owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    #     # owner_factory = models.ForeignKey(Factory, on_delete=models.CASCADE, null=True, blank=True,related_name='owner_factory')
+    #     # receiver_factory = models.ForeignKey(Factory, on_delete=models.CASCADE, null=True, blank=True)
+    # part = models.ForeignKey(Part, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.text
@@ -64,25 +67,27 @@ class ActionStatus(models.Model):
 
 
 class Action(models.Model):
+    status = models.ForeignKey(ActionStatus, on_delete=models.CASCADE, null=True, blank=True,
+                               related_name='executive_status')
+    execute_owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,
+                                      related_name='execute_owner')
+
+    conformity = models.ForeignKey(Conformity, on_delete=models.CASCADE, null=True, blank=True,
+                                   related_name='action')
+    title = models.CharField(max_length=255, blank=True, null=True)
+    reply_text = models.TextField(blank=True, null=True)
+    due_date = models.DateField(null=True, blank=True)
+
+    # execute_department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True,
+    #                                        related_name='execute_dep')
+    # owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,related_name='action_owner')
+    # owner_factory = models.ForeignKey(Factory, on_delete=models.CASCADE, null=True, blank=True)
     # is_publish = models.BooleanField(default=True)
     # publisher = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     # followe_status = models.ForeignKey(ActionStatus, on_delete=models.CASCADE, null=True, blank=True,related_name='follower_status')
     # follower_department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True,related_name='follower_dep')
     # follower_owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,related_name='follower_owner')
-    status = models.ForeignKey(ActionStatus, on_delete=models.CASCADE, null=True, blank=True,
-                               related_name='executive_status')
-    execute_owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,
-                                      related_name='execute_owner')
-    # execute_department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True,
-    #                                        related_name='execute_dep')
-    # owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,related_name='action_owner')
-    # owner_factory = models.ForeignKey(Factory, on_delete=models.CASCADE, null=True, blank=True)
-    conformity = models.ForeignKey(Conformity, on_delete=models.CASCADE, null=True, blank=True,
-                                      related_name='action')
-    title = models.CharField(max_length=255, blank=True, null=True)
     # text = models.TextField(blank=True, null=True)
-    reply_text = models.TextField(blank=True, null=True)
-    due_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return self.title
