@@ -77,8 +77,8 @@ class ConformityFactoryBoardView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     def get(self, request, format=None):
-        authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id=1).department.factory
-        conformity = Conformity.objects.filter(receiver_factory=authority).order_by('-id')
+        authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id=1).department
+        conformity = Conformity.objects.filter(receiver_department=authority).order_by('-id')
         page = self.paginate_queryset(conformity)
         if page is not None:
             serializer = self.get_paginated_response(ConformityBriefSerilizer(page, many=True).data)
@@ -93,11 +93,12 @@ class ConformityMyBoardView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     def get(self, request, format=None):
-        conformity = Conformity.objects.filter(owner=request.user,
-                                               owner_factory=UserAuthority.objects.get(user=request.user,
-                                                                                       is_active=True,
-                                                                                       status_id=1).department.factory).order_by(
-            '-id')
+        conformity = Conformity.objects. \
+            filter(inspection__owner=request.user,
+                   inspection__owner_factory=
+                   UserAuthority.objects.get(user=request.user,
+                                             is_active=True,
+                                             status_id=1).department.factory).order_by('-id')
         page = self.paginate_queryset(conformity)
         if page is not None:
             serializer = self.get_paginated_response(ConformityBriefSerilizer(page, many=True).data)
@@ -108,7 +109,7 @@ class ConformityMyBoardView(APIView, PaginationHandlerMixin):
 
 class ConformityView(APIView):
     def post(self, request, format=None):
-        if Inspection.objects.filter(pk=request.data['inspection'],owner=request.user).count() ==0:
+        if Inspection.objects.filter(pk=request.data['inspection'], owner=request.user).count() == 0:
             return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
         files = request.data.pop('files')
         conformity = ConformitySerilizer(data=request.data)
@@ -178,8 +179,8 @@ class ActionMyBoardView(APIView, PaginationHandlerMixin):
 
     def get(self, request, format=None):
         action = Action.objects.filter(
-            execute_department=UserAuthority.objects.get(user=request.user, is_active=True,
-                                                         status_id=1).department).order_by('-id')
+            execute_owner=UserAuthority.objects.get(user=request.user, is_active=True,
+                                                         status_id=1).user).order_by('-id')
         page = self.paginate_queryset(action)
         if page is not None:
             serializer = self.get_paginated_response(ActionSerilizer(page, many=True).data)

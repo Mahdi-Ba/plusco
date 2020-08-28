@@ -21,12 +21,12 @@ urlpatterns = [
     path('action/', views.ActionView.as_view()),
     path('conformity/change/status/<int:pk>', views.ConformityConfirmView.as_view()),
     path('action/confirm/<int:pk>', views.ActionConfirmView.as_view()),
-
-
-    path('conformity/factory/board', views.ConformityFactoryBoardView.as_view()),
-    path('conformity/my/board', views.ConformityMyBoardView.as_view()),
+    path('conformity/department/board', views.ConformityFactoryBoardView.as_view()),
     path('action/detail/<int:pk>', views.ActionDetailView.as_view()),
+    path('conformity/my/board', views.ConformityMyBoardView.as_view()),
+
     path('action/my/board', views.ActionMyBoardView.as_view()),
+
     # remove below
     path('action/reply', views.ActionReplyView.as_view()),
 
