@@ -62,6 +62,7 @@ urlpatterns = [
     path('v1/structure/',include('organizations.urls')),
     path('v1/reports/',include('reports.urls')),
     path('v1/fcm/', include('pluscofcm.urls')),
+    path('v1/finances/', include('finances.urls')),
     path('v1/silk/', include('silk.urls', namespace='silk')),
 
 ]

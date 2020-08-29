@@ -93,7 +93,7 @@ class StatusView(APIView):
 class FactoryMembersView(APIView):
     def get(self, request, format=None):
         factory = UserAuthority.objects.get(user=request.user, is_active=True).department.factory
-        users = UserAuthority.objects.filter(department__factory=factory, status=1).all()
+        users = UserAuthority.objects.filter(department__factory=factory).all()
         if users:
             authority = DepartmentMemberSerilizer(users, many=True)
             return Response(authority.data, status=status.HTTP_200_OK)

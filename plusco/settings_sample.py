@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     "fcm_django",
     'pluscofcm.apps.PluscofcmConfig',
     "pages",
-    "silk"
+    "silk",
+    'finances'
 
     # 'rest_framework_swagger',
 
