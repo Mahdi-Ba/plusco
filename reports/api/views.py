@@ -40,7 +40,7 @@ class InspectionView(APIView):
     def post(self, request, format=None):
         inspection = InspectionSerilizer(data=request.data)
         if inspection.is_valid():
-            authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id=1)
+            authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id__in=[1,4])
             inspection_obj = inspection.save(owner=request.user, owner_factory=authority.department.factory)
             return Response(inspection.data, status=status.HTTP_200_OK)
         return Response(inspection.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -56,7 +56,7 @@ class InspectionArchiveView(APIView):
         inspection = Inspection.objects.filter(owner=request.user, is_archive=is_archive,
                                                owner_factory=UserAuthority.objects.get(user=request.user,
                                                                                        is_active=True,
-                                                                                       status_id=1).department.factory
+                                                                                       status_id__in=[1,4]).department.factory
                                                ).all().order_by(
             '-id')[:50]
         inspection_serilizer = InspectionSerilizer(inspection, many=True)
@@ -77,7 +77,7 @@ class ConformityFactoryBoardView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     def get(self, request, format=None):
-        authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id=1).department
+        authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id__in=[1,4]).department
         conformity = Conformity.objects.filter(receiver_department=authority).order_by('-id')
         page = self.paginate_queryset(conformity)
         if page is not None:
@@ -98,7 +98,7 @@ class ConformityMyBoardView(APIView, PaginationHandlerMixin):
                    inspection__owner_factory=
                    UserAuthority.objects.get(user=request.user,
                                              is_active=True,
-                                             status_id=1).department.factory).order_by('-id')
+                                             status_id__in=[1,4]).department.factory).order_by('-id')
         page = self.paginate_queryset(conformity)
         if page is not None:
             serializer = self.get_paginated_response(ConformityBriefSerilizer(page, many=True).data)
@@ -114,7 +114,7 @@ class ConformityView(APIView):
         files = request.data.pop('files')
         conformity = ConformitySerilizer(data=request.data)
         if conformity.is_valid():
-            authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id=1)
+            authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id__in=[1,4])
             conformity_obj = conformity.save()
             for file in files:
                 format, imgstr = file.split(';base64,')
@@ -180,7 +180,7 @@ class ActionMyBoardView(APIView, PaginationHandlerMixin):
     def get(self, request, format=None):
         action = Action.objects.filter(
             execute_owner=UserAuthority.objects.get(user=request.user, is_active=True,
-                                                         status_id=1).user).order_by('-id')
+                                                         status_id__in=[1,4]).user).order_by('-id')
         page = self.paginate_queryset(action)
         if page is not None:
             serializer = self.get_paginated_response(ActionSerilizer(page, many=True).data)
@@ -194,7 +194,7 @@ class ActionMyBoardView(APIView, PaginationHandlerMixin):
 class ActionView(APIView):
     def post(self, request, format=None):
         data = Conformity.objects.get(pk=request.data['conformity'])
-        authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id=1)
+        authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id__in=[1,4])
         if data.receiver_department != authority.department or data.reporter != request.user:
             return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
         action = ActionSerilizer(data=request.data)

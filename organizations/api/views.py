@@ -14,6 +14,12 @@ from .serializers import *
 from rest_framework import status
 from ..models import *
 from fcm_django.models import FCMDevice
+from rest_framework.pagination import PageNumberPagination
+from plusco.pagination import PaginationHandlerMixin
+
+
+class BasicPagination(PageNumberPagination):
+    page_size_query_param = 'limit'
 
 
 class OrganizationView(APIView):
@@ -43,7 +49,9 @@ class OrgFactoryView(APIView):
         return Response(serilizer.data)
 
 
-class FactoryView(APIView):
+class FactoryView(APIView, PaginationHandlerMixin):
+    pagination_class = BasicPagination
+
     def post(self, request, format=None):
         data = FactorySerilizer(data=request.data)
         if data.is_valid():
@@ -54,9 +62,14 @@ class FactoryView(APIView):
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get(self, request, format=None):
-        data = Factory.objects.all()
-        serilizer = FactorySerilizer(data, many=True)
+    def get(self, request, format=None, ):
+        data = Factory.objects.filter(
+            Q(title__contains=request.GET['item']) | Q(organization__title__contains=request.GET['item'])).all()
+        data = self.paginate_queryset(data)
+        if data is not None:
+            serilizer = self.get_paginated_response(FactorySerilizer(data, many=True).data)
+        else:
+            serilizer = FactorySerilizer(data, many=True)
         return Response(serilizer.data)
 
 
@@ -70,7 +83,8 @@ class DepartmentView(APIView):
 
     def get(self, request, format=None):
         department = Department.objects.filter(
-            factory=UserAuthority.objects.get(user=request.user, status_id=1, is_active=True).department.factory
+            factory=UserAuthority.objects.get(user=request.user, status_id__in=[1, 4],
+                                              is_active=True).department.factory
         ).all()
         serilizer = DepartmentSerilizer(department, many=True)
         return Response(serilizer.data)
@@ -92,7 +106,7 @@ class StatusView(APIView):
 
 class FactoryMembersView(APIView):
     def get(self, request, format=None):
-        factory = UserAuthority.objects.get(user=request.user, is_active=True).department.factory
+        factory = UserAuthority.objects.get(Q(user=request.user, is_active=True) & ~Q(status_id=2)).department.factory
         users = UserAuthority.objects.filter(department__factory=factory).all()
         if users:
             authority = DepartmentMemberSerilizer(users, many=True)
@@ -103,12 +117,12 @@ class FactoryMembersView(APIView):
 
 class DepartmentMemberByAdminView(APIView):
     def post(self, request, format=None):
-        factory = UserAuthority.objects.get(user=request.user, status_id=1, is_active=True).department.factory
+        factory = UserAuthority.objects.get(user=request.user, status_id=4, is_active=True).department.factory
         if Department.objects.get(pk=request.data['department']).factory != factory:
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
-        admin_group = AdminGroup.objects.get(factory=factory)
-        if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
-            return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+        # admin_group = AdminGroup.objects.get(factory=factory)
+        # if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+        #     return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         user = User.objects.filter(mobile=request.data['mobile']).first()
         if user == None:
             user = User.objects.create_user(request.data['mobile'], random.randint(11111, 99999))
@@ -158,7 +172,7 @@ class DepartmentMemberView(APIView):
             if UserAuthority.objects.filter(user=request.user,
                                             department__factory=dep.factory).first().department.factory == dep.factory:
                 authority = UserAuthority.objects.filter(user=request.user, department__factory=dep.factory).first()
-                if authority.status_id != 1:
+                if authority.status_id != 1 or authority.status_id != 4:
                     send_notif = True
 
                 status_id = authority.status_id
@@ -172,7 +186,7 @@ class DepartmentMemberView(APIView):
             for item in UserAuthority.objects.filter(user=request.user, is_active=True).all():
                 item.is_active = False
                 item.save()
-            status_id = 1
+            status_id = 4
             is_active = True
 
         if send_notif == True:
@@ -197,8 +211,8 @@ class DepartmentMemberView(APIView):
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, format=None):
-        if UserAuthority.objects.filter(id=request.data['member_id'],user=request.user).first() == None:
-            return Response({'success':False,'message':'دسترسی ندارد'},status=status.HTTP_403_FORBIDDEN)
+        if UserAuthority.objects.filter(id=request.data['member_id'], user=request.user).first() == None:
+            return Response({'success': False, 'message': 'دسترسی ندارد'}, status=status.HTTP_403_FORBIDDEN)
         if 'status' in request.data:
             request.data.pop('status')
 
@@ -212,9 +226,13 @@ class DepartmentMemberView(APIView):
 
 class NewRequestAuthorityMember(APIView):
     def get(self, request, format=None):
-        admin_group = AdminGroup.objects.get(
-            factory=UserAuthority.objects.get(user=request.user, status_id=1, is_active=True).department.factory)
-        if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+        # admin_group = AdminGroup.objects.get(
+        #     factory=UserAuthority.objects.get(user=request.user, status_id__in=[1, 4],
+        #                                       is_active=True).department.factory)
+        # if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+        #     return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+        factory = UserAuthority.objects.get(user=request.user, status_id=4, is_active=True).department.factory
+        if Department.objects.get(pk=request.data['department']).factory != factory:
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         else:
             new_user = UserAuthority.objects.filter(
@@ -223,13 +241,17 @@ class NewRequestAuthorityMember(APIView):
             return Response(DepartmentMemberSerilizer(new_user, many=True).data)
 
     def post(self, request, format=None):
-        admin_group = AdminGroup.objects.get(
-            factory=UserAuthority.objects.get(user=request.user, status_id=1, is_active=True).department.factory)
-        if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+        factory = UserAuthority.objects.get(user=request.user, status_id=4, is_active=True).department.factory
+        if Department.objects.get(pk=request.data['department']).factory != factory:
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+        # admin_group = AdminGroup.objects.get(
+        #     factory=UserAuthority.objects.get(user=request.user, status_id__in=[1, 4],
+        #                                       is_active=True).department.factory)
+        # if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+        #     return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         else:
             user = User.objects.get(mobile__exact=request.data['mobile'])
-            if admin_group.owner.id == user.id:
+            if factory.owner.id == user.id:
                 return Response({"status": False, 'message': 'مالک کارگاه'}, status=status.HTTP_400_BAD_REQUEST)
 
             user_authority = UserAuthority.objects.get(pk=request.data['id'], user=user)
@@ -330,9 +352,13 @@ class RelationView(APIView):
         return Response(serializers.data)
 
     def delete(self, request):
-        admin_group = AdminGroup.objects.get(
-            factory=UserAuthority.objects.get(user=request.user, status_id=1, is_active=True).department.factory)
-        if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+        # admin_group = AdminGroup.objects.get(
+        #     factory=UserAuthority.objects.get(user=request.user, status_id__in=[1, 4],
+        #                                       is_active=True).department.factory)
+        # if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+        #     return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+        authority = UserAuthority.objects.filter(user=request.user, is_active=True, status_id=4).first()
+        if authority == None:
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         if Relation.objects.filter(pk=request.GET['id']).exists():
             relation_obj = Relation.objects.get(pk=request.GET['id'])
@@ -342,12 +368,16 @@ class RelationView(APIView):
         return Response({"status": False, "message": "NOT FOUND"}, status=status.HTTP_404_NOT_FOUND)
 
     def post(self, request, format=None):
-        admin_group = AdminGroup.objects.get(
-            factory=UserAuthority.objects.get(user=request.user, status_id=1, is_active=True).department.factory)
-        if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+
+        # admin_group = AdminGroup.objects.get(
+        #     factory=UserAuthority.objects.get(user=request.user, status_id__in=[1, 4],
+        #                                       is_active=True).department.factory)
+        # if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+        #     return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+        authority = UserAuthority.objects.filter(user=request.user, is_active=True, status_id=4).first()
+        if authority == None:
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
 
-        authority = UserAuthority.objects.get(user=request.user, is_active=True)
         request.data['source'] = str(authority.department.factory.id)
         data = RelationSerilizer(data=request.data)
         if data.is_valid():
@@ -370,23 +400,29 @@ class RelationView(APIView):
 
 class NewRelationView(APIView):
     def get(self, request, format=None):
-        admin_group = AdminGroup.objects.get(
-            factory=UserAuthority.objects.get(user=request.user, status_id=1, is_active=True).department.factory)
-        if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
-            return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+        # admin_group = AdminGroup.objects.get(
+        #     factory=UserAuthority.objects.get(user=request.user, status_id__in=[1, 4],
+        #                                       is_active=True).department.factory)
+        # if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+        #     return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         authority = UserAuthority.objects.get(user=request.user, is_active=True)
         relation = Relation.objects.filter(source=authority.department.factory.id, status_id=2)
         serializers = RelationSerilizer(relation, many=True)
         return Response(serializers.data)
 
     def post(self, request, format=None):
-        admin_group = AdminGroup.objects.get(
-            factory=UserAuthority.objects.get(user=request.user, status_id=1, is_active=True).department.factory)
-        if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
-            return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+        # admin_group = AdminGroup.objects.get(
+        #     factory=UserAuthority.objects.get(user=request.user, status_id__in=[1, 4],
+        #                                       is_active=True).department.factory)
+        # if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
+        #     return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         if not Relation.objects.filter(pk=request.data['id'], owner=None).exists():
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         else:
+            if Relation.objects.filter(pk=request.data['id'], owner=None).first().target != UserAuthority.objects.get(
+                    user=request.user, status_id=4, is_active=True).department.factory:
+                return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+
             relation = Relation.objects.get(pk=request.data['id'], owner=None)
             relation.owner = request.user
             relation.status_id = 1
