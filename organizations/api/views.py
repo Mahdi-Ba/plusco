@@ -51,7 +51,6 @@ class OrgFactoryView(APIView):
 
 class FactoryView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
-
     def post(self, request, format=None):
         data = FactorySerilizer(data=request.data)
         if data.is_valid():
