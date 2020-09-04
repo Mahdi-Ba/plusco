@@ -164,12 +164,15 @@ class DepartmentMemberView(APIView):
         if 'status' in request.data:
             request.data.pop('status')
         send_notif = False
+        status_id = 2
+        is_active = False
+
         dep = Department.objects.get(pk=request.data['department'])
         if UserAuthority.objects.filter(user=request.user, department__factory=dep.factory).exists():
             if UserAuthority.objects.filter(user=request.user,
                                             department__factory=dep.factory).first().department.factory == dep.factory:
                 authority = UserAuthority.objects.filter(user=request.user, department__factory=dep.factory).first()
-                if authority.status_id != 1 or authority.status_id != 4:
+                if authority.status_id != 1 and authority.status_id != 4:
                     send_notif = True
 
                 status_id = authority.status_id
@@ -185,11 +188,12 @@ class DepartmentMemberView(APIView):
                 item.save()
             status_id = 4
             is_active = True
-
         if send_notif == True:
             status_id = 2
-            admin_group = AdminGroup.objects.get(factory=Department.objects.get(pk=request.data['department']).factory)
-            user_ids = AdminUser.objects.filter(admin_group=admin_group).all().values_list('user_id', flat=True)
+            # admin_group = AdminGroup.objects.get(factory=Department.objects.get(pk=request.data['department']).factory)
+            user_ids = UserAuthority.objects.filter(user=request.user, is_active=True,status_id=4,department_id=request.data['department'])\
+                .all().values_list('user_id', flat=True)
+            # user_ids = AdminUser.objects.filter(admin_group=admin_group).all().values_list('user_id', flat=True)
             device = FCMDevice.objects.filter(user_id__in=user_ids).all()
             payload = {
                 "type": "accept-user",
@@ -197,11 +201,10 @@ class DepartmentMemberView(APIView):
                 "click_action": "FLUTTER_NOTIFICATION_CLICK"
             }
             is_active = False
-
         request.data['user'] = str(request.user.id)
         data = DepartmentMemberSerilizer(data=request.data)
         if data.is_valid():
-            data.save(status=Status.objects.get(pk=status_id), is_active=is_active)
+            data.save(status_id=status_id, is_active=is_active)
             if send_notif == True:
                 device.send_message(title='تقاضای عضویت', body='یک در خواست جدید عضویت ثبت شد', data=payload)
             return Response(data.data, status=status.HTTP_200_OK)
