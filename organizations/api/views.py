@@ -73,11 +73,17 @@ class FactoryView(APIView, PaginationHandlerMixin):
 
 class DepartmentView(APIView):
     def post(self, request, format=None):
-        data = DepartmentSerilizer(data=request.data)
-        if data.is_valid():
-            data.save(owner=request.user)
-            return Response(data.data, status=status.HTTP_200_OK)
-        return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
+        records = []
+        for item in  request.data['title']:
+            request.data['title']= item
+            data = DepartmentSerilizer(data=request.data)
+            if data.is_valid():
+                record = data.save(owner=request.user)
+                records.append(record.id)
+        departments = Department.objects.filter(id__in=records)
+        data = DepartmentSerilizer(departments,many=True)
+        return Response(data.data, status=status.HTTP_200_OK)
+        # return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, format=None):
         authority = UserAuthority.objects.filter(user=request.user, status_id__in=[1, 4], is_active=True).first()
