@@ -354,7 +354,7 @@ class RelationView(APIView):
     def get(self, request, format=None):
         authority = UserAuthority.objects.filter(user=request.user, is_active=True).first()
         if authority == None:
-            return Response({'success':False,'کارگاه فعالی یاقت نشد'})
+            return Response({'success':False,'message':'کارگاه فعالی یاقت نشد'})
         relation = Relation.objects.filter(source=authority.department.factory.id, status_id=1).all()
         serializers = RelationSerilizer(relation, many=True)
         return Response(serializers.data)
