@@ -51,6 +51,7 @@ class OrgFactoryView(APIView):
 
 class FactoryView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
+
     def post(self, request, format=None):
         data = FactorySerilizer(data=request.data)
         if data.is_valid():
@@ -71,24 +72,25 @@ class FactoryView(APIView, PaginationHandlerMixin):
             serilizer = FactorySerilizer(data, many=True)
         return Response(serilizer.data)
 
+
 class DepartmentView(APIView):
     def post(self, request, format=None):
         records = []
-        for item in  request.data['title']:
-            request.data['title']= item
+        for item in request.data['title']:
+            request.data['title'] = item
             data = DepartmentSerilizer(data=request.data)
             if data.is_valid():
                 record = data.save(owner=request.user)
                 records.append(record.id)
         departments = Department.objects.filter(id__in=records)
-        data = DepartmentSerilizer(departments,many=True)
+        data = DepartmentSerilizer(departments, many=True)
         return Response(data.data, status=status.HTTP_200_OK)
         # return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, format=None):
         authority = UserAuthority.objects.filter(user=request.user, status_id__in=[1, 4], is_active=True).first()
         if authority == None:
-            return Response({'success':False},status=status.HTTP_404_NOT_FOUND)
+            return Response({'success': False}, status=status.HTTP_404_NOT_FOUND)
         serilizer = DepartmentSerilizer(authority.department, many=False)
         return Response(serilizer.data)
 
@@ -197,7 +199,8 @@ class DepartmentMemberView(APIView):
         if send_notif == True:
             status_id = 2
             # admin_group = AdminGroup.objects.get(factory=Department.objects.get(pk=request.data['department']).factory)
-            user_ids = UserAuthority.objects.filter(user=request.user, is_active=True,status_id=4,department_id=request.data['department'])\
+            user_ids = UserAuthority.objects.filter(user=request.user, is_active=True, status_id=4,
+                                                    department_id=request.data['department']) \
                 .all().values_list('user_id', flat=True)
             # user_ids = AdminUser.objects.filter(admin_group=admin_group).all().values_list('user_id', flat=True)
             device = FCMDevice.objects.filter(user_id__in=user_ids).all()
@@ -354,9 +357,17 @@ class RelationView(APIView):
     def get(self, request, format=None):
         authority = UserAuthority.objects.filter(user=request.user, is_active=True).first()
         if authority == None:
-            return Response({'success':False,'message':'کارگاه فعالی یاقت نشد'})
+            return Response({'success': False, 'message': 'کارگاه فعالی یاقت نشد'})
         relation = Relation.objects.filter(source=authority.department.factory.id, status_id=1).all()
         serializers = RelationSerilizer(relation, many=True)
+        serializers.data['src'] = {
+            'depeartment_id': authority.department.id,
+            'depeartment_name': authority.department.title,
+            'factory_id': authority.department.factory.id,
+            'factory_name': authority.department.factory.title,
+            'org': authority.department.factory.organization.title,
+            'org_id': authority.department.factory.organization.id
+        }
         return Response(serializers.data)
 
     def delete(self, request):
