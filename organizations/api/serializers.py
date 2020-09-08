@@ -193,7 +193,7 @@ class RelationSerilizer(serializers.ModelSerializer):
     owner = BriefUser(many=False, required=False, read_only=True)
     source = serializers.CharField(write_only=True)
     target = serializers.CharField(write_only=True)
-    source_factory = FactorySerilizer(source='source', read_only=True)
+    # source_factory = FactorySerilizer(source='source', read_only=True)
     target_factory = FactorySerilizer(source='target', read_only=True)
     type = serializers.CharField()
     status_title = serializers.CharField(read_only=True, source='status')
