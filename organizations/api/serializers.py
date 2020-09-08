@@ -200,7 +200,7 @@ class RelationSerilizer(serializers.ModelSerializer):
 
     class Meta:
         model = Relation
-        fields = ['id', 'owner', 'source', 'target', 'type', 'source_factory', 'target_factory', 'status',
+        fields = ['id', 'owner', 'source', 'target', 'type', 'target_factory', 'status',
                   'status_title']
         validators = [
             UniqueTogetherValidator(
