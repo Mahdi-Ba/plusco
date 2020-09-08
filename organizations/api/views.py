@@ -360,7 +360,7 @@ class RelationView(APIView):
             return Response({'success': False, 'message': 'کارگاه فعالی یاقت نشد'})
         relation = Relation.objects.filter(source=authority.department.factory.id, status_id=1).all()
         serializers = RelationSerilizer(relation, many=True)
-        serializers.data['src'] = {
+        data = {
             'depeartment_id': authority.department.id,
             'depeartment_name': authority.department.title,
             'factory_id': authority.department.factory.id,
@@ -368,7 +368,7 @@ class RelationView(APIView):
             'org': authority.department.factory.organization.title,
             'org_id': authority.department.factory.organization.id
         }
-        return Response(serializers.data)
+        return Response({'dest':serializers.data,'src':data})
 
     def delete(self, request):
         # admin_group = AdminGroup.objects.get(

@@ -197,9 +197,10 @@ class RelationSerilizer(serializers.ModelSerializer):
     type = serializers.CharField()
     status_title = serializers.CharField(read_only=True, source='status')
 
+
     class Meta:
         model = Relation
-        fields = ['id', 'owner', 'source', 'target', 'type', 'target_factory', 'status',
+        fields = ['id', 'owner', 'source', 'src','target', 'type', 'target_factory', 'status',
                   'status_title']
         validators = [
             UniqueTogetherValidator(
@@ -207,6 +208,7 @@ class RelationSerilizer(serializers.ModelSerializer):
                 fields=['source', 'target']
             )
         ]
+
 
     def create(self, validate_data):
         validate_data['source'] = Factory.objects.get(pk=int(validate_data['source']))
