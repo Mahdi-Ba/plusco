@@ -10,10 +10,10 @@ from django.urls import reverse
 class OrgSerilizer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=True,
                                   validators=[UniqueValidator(queryset=Organization.objects.all())])
-    image = serializers.FileField(required=False)
-    province = serializers.CharField(max_length=255, required=False)
-    city = serializers.CharField(max_length=255, required=False)
-    phone = serializers.CharField(max_length=255, required=False)
+    image = serializers.FileField(required=False,allow_null=True)
+    province = serializers.CharField(max_length=255, required=False,allow_null=True)
+    city = serializers.CharField(max_length=255, required=False,allow_null=True)
+    phone = serializers.CharField(max_length=255, required=False,allow_null=True)
 
     class Meta:
         model = Organization
@@ -25,11 +25,11 @@ class FactorySerilizer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=True)
     organization = serializers.CharField()
     org_image = serializers.ImageField(source='organization.image', required=False, read_only=True)
-    province = serializers.CharField(max_length=255, required=False)
-    city = serializers.CharField(max_length=255, required=False)
-    address = serializers.CharField(required=False)
-    phone = serializers.CharField(max_length=255, required=False)
-    rel_phone = serializers.CharField(max_length=255, required=False)
+    province = serializers.CharField(max_length=255, required=False,allow_null=True)
+    city = serializers.CharField(max_length=255, required=False,allow_null=True)
+    address = serializers.CharField(required=False,allow_null=True)
+    phone = serializers.CharField(max_length=255, required=False,allow_null=True)
+    rel_phone = serializers.CharField(max_length=255, required=False,allow_null=True)
 
     class Meta:
         model = Factory

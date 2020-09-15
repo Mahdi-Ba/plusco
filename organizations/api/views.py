@@ -91,8 +91,8 @@ class DepartmentView(APIView):
         authority = UserAuthority.objects.filter(user=request.user, status_id__in=[1, 4], is_active=True).first()
         if authority == None:
             return Response({'success': False}, status=status.HTTP_404_NOT_FOUND)
-        serilizer = DepartmentSerilizer(authority.department, many=False)
-        return Response(serilizer.data)
+        authority = DepartmentMemberSerilizer(authority, many=False)
+        return Response(authority.data, status=status.HTTP_200_OK)
 
 
 class DepartmentPositioView(APIView):
