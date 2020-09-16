@@ -80,6 +80,7 @@ class DepartmentMemberSerilizer(serializers.ModelSerializer):
     user = serializers.CharField(required=False)
     user_detail = BriefUser(many=False, required=False, read_only=True, source='user')
     department = serializers.CharField(required=False)
+    department_id = serializers.IntegerField(read_only=True)
     position = serializers.CharField(required=False,allow_blank=True,allow_null=True)
     status_title = serializers.CharField(read_only=True, source='status')
     status_item = serializers.IntegerField(required=False, write_only=True, source='status')
@@ -94,7 +95,7 @@ class DepartmentMemberSerilizer(serializers.ModelSerializer):
 
     class Meta:
         model = UserAuthority
-        fields = ['id', 'user', 'user_detail', 'department', 'position', 'status', 'status_title', 'factory',
+        fields = ['id', 'user', 'user_detail', 'department','department_id' ,'position', 'status', 'status_title', 'factory',
                   'status_item', 'is_active', 'name', 'family', 'national_code', 'email', 'phone', 'education',
                   ]
 
