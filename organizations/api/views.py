@@ -122,7 +122,11 @@ class FactoryMembersView(APIView):
 
 class DepartmentMemberByAdminView(APIView):
     def post(self, request, format=None):
-        factory = UserAuthority.objects.get(user=request.user, status_id=4, is_active=True).department.factory
+        authority = UserAuthority.objects.filter(user=request.user, status_id=4, is_active=True).first()
+        if authority == None:
+            return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
+
+        factory = authority.department.factory
         if Department.objects.get(pk=request.data['department']).factory != factory:
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         # admin_group = AdminGroup.objects.get(factory=factory)
@@ -145,6 +149,24 @@ class DepartmentMemberByAdminView(APIView):
 
                                                       )
         return Response(DepartmentMemberSerilizer(user_authority, many=False).data)
+
+    def put(self, request, format=None):
+        admin = UserAuthority.objects.filter(user=request.user, is_active=True, status_id=4).first()
+        if admin == None:
+            return Response({'success': False, 'message': 'دسترسی ندارد'}, status=status.HTTP_403_FORBIDDEN)
+        user = UserAuthority.objects.filter(id=request.data['member_id']).first()
+        if user == None:
+            return Response({'success': False, 'message': 'دسترسی ندارد'}, status=status.HTTP_403_FORBIDDEN)
+
+        if user.department.factory != admin.department.factory:
+            return Response({'success': False, 'message': 'دسترسی ندارد'}, status=status.HTTP_403_FORBIDDEN)
+
+        authority = UserAuthority.objects.get(id=request.data['member_id'])
+        data = DepartmentMemberSerilizer(authority, data=request.data)
+        if data.is_valid():
+            instance = data.save()
+            return Response(data.data, status=status.HTTP_200_OK)
+        return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class DepartmentSwitchView(APIView):
@@ -368,7 +390,7 @@ class RelationView(APIView):
             'org': authority.department.factory.organization.title,
             'org_id': authority.department.factory.organization.id
         }
-        return Response({'dest':serializers.data,'src':data})
+        return Response({'dest': serializers.data, 'src': data})
 
     def delete(self, request):
         # admin_group = AdminGroup.objects.get(

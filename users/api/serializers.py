@@ -36,4 +36,4 @@ class UserSerializer(serializers.ModelSerializer):
 class BriefUser(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id','mobile', 'first_name', 'last_name',]
+        fields = ['id','mobile', 'first_name', 'last_name','file']
