@@ -425,16 +425,16 @@ class RelationView(APIView):
             instance = data.save(owner=request.user, status_id=2)
             Relation.objects.create(source=instance.target, target=instance.source,
                                     type=RelationType.objects.get(id=request.data['type']).opposite_title, status_id=2)
-            admin_user = AdminUser.objects.filter(
-                admin_group=AdminGroup.objects.get(factory_id=request.data['target'])).all().values_list('user_id',
-                                                                                                         flat=True)
-            device = FCMDevice.objects.filter(user_id__in=admin_user).all()
-            payload = {
-                "type": "accept-relation",
-                "priority": "high",
-                "click_action": "FLUTTER_NOTIFICATION_CLICK"
-            }
-            device.send_message(title='تقاضای ذینفع', body='یک در خواست جدید  ثبت شد', data=payload)
+            # admin_user = AdminUser.objects.filter(
+            #     admin_group=AdminGroup.objects.get(factory_id=request.data['target'])).all().values_list('user_id',
+            #                                                                                              flat=True)
+            # device = FCMDevice.objects.filter(user_id__in=admin_user).all()
+            # payload = {
+            #     "type": "accept-relation",
+            #     "priority": "high",
+            #     "click_action": "FLUTTER_NOTIFICATION_CLICK"
+            # }
+            # device.send_message(title='تقاضای ذینفع', body='یک در خواست جدید  ثبت شد', data=payload)
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -460,7 +460,7 @@ class NewRelationView(APIView):
         if not Relation.objects.filter(pk=request.data['id'], owner=None).exists():
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         else:
-            if Relation.objects.filter(pk=request.data['id'], owner=None).first().target != UserAuthority.objects.get(
+            if Relation.objects.filter(pk=request.data['id'], owner=None).first().source != UserAuthority.objects.get(
                     user=request.user, status_id=4, is_active=True).department.factory:
                 return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
 
