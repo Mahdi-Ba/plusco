@@ -446,8 +446,8 @@ class NewRelationView(APIView):
         #                                       is_active=True).department.factory)
         # if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
         #     return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
-        authority = UserAuthority.objects.get(user=request.user, is_active=True)
-        relation = Relation.objects.filter(source=authority.department.factory.id, status_id=2)
+        authority = UserAuthority.objects.get(user=request.user, is_active=True,status_id=4)
+        relation = Relation.objects.filter(source=authority.department.factory, status_id=2).all()
         serializers = RelationSerilizer(relation, many=True)
         return Response(serializers.data)
 
