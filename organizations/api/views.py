@@ -380,12 +380,11 @@ class RelationInspectionView(APIView):
         authority = UserAuthority.objects.filter(user=request.user, is_active=True).first()
         if authority == None:
             return Response({'success': False, 'message': 'کارگاه فعالی یاقت نشد'})
-        relation = Relation.objects.filter(source=authority.department.factory.id, status_id=1).all()
+        relation = Relation.objects.filter(source=authority.department.factory.id, status_id=1, type__order=3).all()
         serializers = RelationSerilizer(relation, many=True)
-
         relation_target = Relation.objects.filter(target=authority.department.factory.id, status_id=1).first()
         serializers_target = RelationSerilizer(relation_target, many=False)
-        return Response({'dest': serializers.data,'src':serializers_target.data })
+        return Response({'dest': serializers.data, 'src': serializers_target.data})
 
 
 class RelationView(APIView):
@@ -433,6 +432,9 @@ class RelationView(APIView):
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
 
         request.data['source'] = str(authority.department.factory.id)
+        if Relation.objects.filter(source=request.data['source'], target=request.data['target']).first() != None:
+            return Response({"status": False, 'message': 'قبلا ثبت شده است'}, status=status.HTTP_400_BAD_REQUEST)
+
         data = RelationSerilizer(data=request.data)
         if data.is_valid():
             instance = data.save(owner=request.user, status_id=2)
@@ -459,8 +461,8 @@ class NewRelationView(APIView):
         #                                       is_active=True).department.factory)
         # if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
         #     return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
-        authority = UserAuthority.objects.get(user=request.user, is_active=True,status_id=4)
-        relation = Relation.objects.filter(source=authority.department.factory, status_id=2,owner__isnull=True).all()
+        authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id=4)
+        relation = Relation.objects.filter(source=authority.department.factory, status_id=2, owner__isnull=True).all()
         serializers = RelationSerilizer(relation, many=True)
         return Response(serializers.data)
 
@@ -473,7 +475,8 @@ class NewRelationView(APIView):
         if not Relation.objects.filter(pk=request.data['id'], owner__isnull=True).exists():
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         else:
-            if Relation.objects.filter(pk=request.data['id'], owner__isnull=True).first().source != UserAuthority.objects.get(
+            if Relation.objects.filter(pk=request.data['id'],
+                                       owner__isnull=True).first().source != UserAuthority.objects.get(
                     user=request.user, status_id=4, is_active=True).department.factory:
                 return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
 
