@@ -236,7 +236,7 @@ class InspectionDetailSerilizer(serializers.ModelSerializer):
     receiver_factory_detail = FactorySerilizer(required=False, many=False, source='receiver_factory')
     is_archive = serializers.BooleanField(required=False)
     conformity_count = serializers.SerializerMethodField()
-    conformity = ConformityBriefSerilizer(read_only=True, many=True)
+    conformity = ConformitySerilizer(read_only=True, many=True)
 
     class Meta:
         model = Inspection
