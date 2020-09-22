@@ -14,6 +14,7 @@ urlpatterns = [
     path('inspection/update/<int:pk>', views.InspectionUpdateView.as_view()),
     path('conformity/status/', views.StatusConformityView.as_view()),
     path('conformity/', views.ConformityView.as_view()),
+    path('action/list', views.ConformityView.as_view()),
     path('conformity/detail/<int:pk>', views.ConformityDetailView.as_view()),
     path('action/catch/', views.CatchActionView.as_view()),
     path('action/reject/', views.RejectActionView.as_view()),

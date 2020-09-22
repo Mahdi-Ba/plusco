@@ -129,6 +129,18 @@ class ConformityView(APIView):
             return Response(conformity.data, status=status.HTTP_200_OK)
         return Response(conformity.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def get(self, request, format=None):
+        user = UserAuthority.objects.filter(user=request.user, is_active=True, status_id__in=[1, 4]).first()
+        if user == None:
+            return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
+
+        conformity = Conformity.objects.filter(receiver_department=user.department)
+        if 'status' in request.GET:
+            conformity = conformity.filter(status_id=request.GET['status'])
+        conformity = conformity.all()
+        serializer = ConformitySerilizer(conformity, many=True)
+        return Response(serializer.data)
+
 
 class ConformityConfirmView(APIView):
     def post(self, request, pk, format=None):
