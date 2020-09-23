@@ -20,6 +20,8 @@ from rest_framework import status
 from ..models import *
 from fcm_django.models import FCMDevice
 
+from ..views import send_request
+
 
 class CategoryView(APIView):
     def get(self, request, format=None):
@@ -38,24 +40,26 @@ class PlanView(APIView):
 class NowPlanView(APIView):
     def get(self, request, format=None):
         factory = UserAuthority.objects.get(user=request.user, is_active=True).department.factory
-        data = FactoryPlan.objects.filter(start_date__lte=datetime.datetime.now(),end_date__gt=datetime.datetime.now(),is_success=True,factory=factory).order_by('id').first()
+        data = FactoryPlan.objects.filter(start_date__lte=datetime.datetime.now(), end_date__gt=datetime.datetime.now(),
+                                          is_success=True, factory=factory).order_by('id').first()
         serilizer = FactoryPlanSerilizer(data, many=False)
         return Response(serilizer.data)
-    
+
+
 class FactoryPlanView(APIView):
     def get(self, request, format=None):
         factory = UserAuthority.objects.get(user=request.user, is_active=True).department.factory
         data = FactoryPlan.objects.filter(factory=factory).order_by('-id').all()
         serilizer = FactoryPlanSerilizer(data, many=True)
         return Response(serilizer.data)
-    
+
+
 class MePlanView(APIView):
     def get(self, request, format=None):
         data = FactoryPlan.objects.filter(user=request.user).order_by('-id').all()
         serilizer = FactoryPlanSerilizer(data, many=True)
         return Response(serilizer.data)
-    
-    
+
 
 class ReservPlanView(APIView):
     def post(self, request, format=None):
@@ -76,18 +80,23 @@ class ReservPlanView(APIView):
         if plan.month != 0:
             end_time = start_time + datetime.timedelta(days=plan.month * 30)
 
-            FactoryPlan.objects.create(
+            buy_plan = FactoryPlan.objects.create(
                 factory=factory, user=request.user, count=plan.count,
                 start_date=start_time, end_date=end_time,
                 price=plan.price,
                 percent=plan.percent,
                 price_with_tax=plan.price_with_tax
             )
-            return Response({'success': True, 'message': 'موفق'})
+            data = send_request(buy_plan)
+            if data[0]:
+                return Response({'success': True, 'url': data[1]})
 
         else:
             if any_paln:
                 return Response({'success': False, 'message': message}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                factory_plan.count += plan.count
-                return Response({'success': True, 'message': 'موفق'})
+                factory_plan.increase_count = plan.count
+                factory_plan.save()
+                data = send_request(factory_plan)
+                if data[0]:
+                    return Response({'success': True, 'url': data[1]})

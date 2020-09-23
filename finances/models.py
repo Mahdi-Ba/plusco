@@ -25,10 +25,12 @@ class FactoryPlan(models.Model):
     factory = models.ForeignKey(Factory, on_delete=models.SET_NULL, null=True)
     user = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
     count = models.IntegerField()
+    increase_count = models.IntegerField(default=0)
     start_date = models.DateTimeField(null=False, blank=False)
     end_date = models.DateTimeField(null=False, blank=False)
     price = models.DecimalField(max_digits=15, decimal_places=0)
     percent = models.FloatField()
     price_with_tax = models.DecimalField(max_digits=15, decimal_places=0)
     is_success = models.BooleanField(default=False)
+    ref_id = models.CharField(max_length=255, blank=True, null=True)
 
