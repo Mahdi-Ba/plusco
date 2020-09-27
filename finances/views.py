@@ -1,8 +1,10 @@
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
+from fcm_django.models import FCMDevice
 from zeep import Client
 
 from finances.models import FactoryPlan
+from organizations.models import UserAuthority
 from plusco.settings import BASE_URL
 
 MERCHANT = '329811de-8125-4fce-836d-a1f0d048c5e0'
@@ -28,11 +30,21 @@ def verify(request):
         result = client.service.PaymentVerification(MERCHANT, request.GET['Authority'], amount)
         if result.Status == 100:
             factory_plan = FactoryPlan.objects.get(id=request.GET['id'])
-            if factory_plan.increase_count >0:
+            if factory_plan.increase_count > 0:
                 factory_plan.count += factory_plan.increase_count
             factory_plan.is_success = True
             factory_plan.ref_id = str(result.RefID)
             factory_plan.save()
+            authority = UserAuthority.objects.filter(department__factory=factory_plan.factory, is_active=True,
+                                                     status_id=4).all().values_list('user', flat=True)
+            device = FCMDevice.objects.filter(user_id__in=authority).all()
+            payload = {
+                "type": "pay-close",
+                "id": request.GET['id'],
+                "priority": "high",
+                "click_action": "FLUTTER_NOTIFICATION_CLICK"
+            }
+            device.send_message(title='پرداخت شد', body='پرداخت کارگاه با موفقیت انجام شد ', data=payload)
             return render(request, 'callback/index.html', {'transaction': request.GET['id'], 'status': True,
                                                            'message': 'با موفقیت انجام شد'})
         elif result.Status == 101:
@@ -42,5 +54,5 @@ def verify(request):
             return render(request, 'callback/index.html', {'transaction': request.GET['id'], 'status': False,
                                                            'message': 'خطا در انجام تراکنش '})
     else:
-        return render(request, 'callback/index.html', {'transaction': request.GET['id'], 'status': False, 'message': 'تراکنش توسط کاربر کنسل شده است'})
-
+        return render(request, 'callback/index.html',
+                      {'transaction': request.GET['id'], 'status': False, 'message': 'تراکنش توسط کاربر کنسل شده است'})

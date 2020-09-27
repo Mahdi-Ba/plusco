@@ -115,8 +115,18 @@ class ConformityView(APIView):
         files = request.data.pop('files')
         conformity = ConformitySerilizer(data=request.data)
         if conformity.is_valid():
-            authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id__in=[1, 4])
+            # authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id__in=[1, 4])
             conformity_obj = conformity.save()
+            users = UserAuthority.objects.filter(department=conformity_obj.receiver_department, is_active=True,
+                                                 status_id__in=[1, 4]).all().values_list('user', flat=True)
+            device = FCMDevice.objects.filter(user_id__in=users).all()
+            payload = {
+                "type": "new-action",
+                "id": conformity_obj.id,
+                "priority": "high",
+                "click_action": "FLUTTER_NOTIFICATION_CLICK"
+            }
+            device.send_message(title='بازرسی شد', body='عدم انطباق جدید دریافت شد ', data=payload)
             for file in files:
                 format, imgstr = file.split(';base64,')
                 ext = format.split('/')[-1]
@@ -218,6 +228,14 @@ class ActionView(APIView):
         action = ActionSerilizer(data=request.data)
         if action.is_valid():
             action_obj = action.save(execute_owner=request.user)
+            device = FCMDevice.objects.filter(user=action_obj.conformity.inspection.owner).all()
+            payload = {
+                "type": "action-report",
+                "id": action_obj.conformity.inspection.id,
+                "priority": "high",
+                "click_action": "FLUTTER_NOTIFICATION_CLICK"
+            }
+            device.send_message(title='انجام اقدام', body='اقدام جدید انجام شد', data=payload)
             files = request.data.pop('files')
             for file in files:
                 format, imgstr = file.split(';base64,')

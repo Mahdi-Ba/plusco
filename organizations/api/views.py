@@ -109,6 +109,7 @@ class StatusView(APIView):
         return Response(serilizer.data)
 
 
+
 class FactoryMembersView(APIView):
     def get(self, request, format=None):
         factory = UserAuthority.objects.get(Q(user=request.user, is_active=True) & ~Q(status_id=2)).department.factory
@@ -148,6 +149,14 @@ class DepartmentMemberByAdminView(APIView):
                                                       position_id=request.data.get('position', None),
 
                                                       )
+        device = FCMDevice.objects.filter(user_id=user.id).all()
+        payload = {
+            "type": "accept-join-request",
+            "priority": "high",
+            "click_action": "FLUTTER_NOTIFICATION_CLICK"
+        }
+        device.send_message(title='تقاضای عضویت', body='عضویت شما تایید شد', data=payload)
+
         return Response(DepartmentMemberSerilizer(user_authority, many=False).data)
 
     def put(self, request, format=None):
@@ -165,8 +174,20 @@ class DepartmentMemberByAdminView(APIView):
         data = DepartmentMemberSerilizer(authority, data=request.data)
         if data.is_valid():
             instance = data.save()
+            if 'status_item' in request.data:
+                if request.data['status_item'] != "2":
+                    device = FCMDevice.objects.filter(user_id=authority.user.id).all()
+                    payload = {
+                        "type": "accept-join-request",
+                        "priority": "high",
+                        "click_action": "FLUTTER_NOTIFICATION_CLICK"
+                    }
+                    device.send_message(title='تقاضای عضویت', body='عضویت شما تایید شد', data=payload)
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 
 
 class DepartmentSwitchView(APIView):
@@ -487,6 +508,13 @@ class NewRelationView(APIView):
             reverce_relation = Relation.objects.get(source=relation.target, target=relation.source)
             reverce_relation.status_id = 1
             reverce_relation.save()
+            device = FCMDevice.objects.filter(user_id=reverce_relation.owner.id).all()
+            payload = {
+                "type": "accept-relation-request",
+                "priority": "high",
+                "click_action": "FLUTTER_NOTIFICATION_CLICK"
+            }
+            device.send_message(title='ارتباط با ذی نفع', body='ارتباط با ذی نفع مورد نظر برقرار شد', data=payload)
             return Response({"status": True, 'message': 'ارتباط با ذی نفع مورد نظر برقرار شد'})
 
 
