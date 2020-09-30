@@ -114,6 +114,9 @@ class ConformityMyBoardView(APIView, PaginationHandlerMixin):
 class ConformityView(APIView):
     def post(self, request, format=None):
         authority = UserAuthority.objects.filter(user=request.user, is_active=True, status_id__in=[1, 4]).first()
+        if authority == None:
+            return Response({"status": False, 'message': "دسترسی وجود ندارد"}, status=status.HTTP_403_FORBIDDEN)
+
         plan = FactoryPlan.objects.filter(start_date__lte=datetime.datetime.now(), end_date__gt=datetime.datetime.now(),
                                    is_success=True, factory=authority.department.factory).order_by('id').first()
         if plan == None:
