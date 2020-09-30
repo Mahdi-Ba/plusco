@@ -90,6 +90,8 @@ class ReservPlanView(APIView):
             data = send_request(buy_plan)
             if data[0]:
                 return Response({'success': True, 'url': data[1]})
+            else:
+                return Response({'success':False,'message':'gateway error'})
 
         else:
             if any_paln:

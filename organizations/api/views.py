@@ -403,7 +403,9 @@ class RelationInspectionView(APIView):
             return Response({'success': False, 'message': 'کارگاه فعالی یاقت نشد'})
         relation = Relation.objects.filter(source=authority.department.factory.id, status_id=1, type__order=3).all()
         serializers = RelationSerilizer(relation, many=True)
-        relation_target = Relation.objects.filter(target=authority.department.factory.id, status_id=1).first()
+        # relation_target = Relation.objects.filter(target=authority.department.factory.id, status_id=1).first()
+
+        relation_target = Relation(owner=request.user,target=authority.department.factory,status_id=1)
         serializers_target = RelationSerilizer(relation_target, many=False)
         return Response({'dest': serializers.data, 'src': serializers_target.data})
 
