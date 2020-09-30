@@ -120,7 +120,7 @@ class ConformityView(APIView):
         plan = FactoryPlan.objects.filter(start_date__lte=datetime.datetime.now(), end_date__gt=datetime.datetime.now(),
                                    is_success=True, factory=authority.department.factory).order_by('id').first()
         if plan == None:
-            return Response({"status": False, 'message': "دسترسی کارگاه محدودیت دارد"}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"status": False, 'message': "بسته فعالی برای کارگاه وجود ندارد"}, status=status.HTTP_401_UNAUTHORIZED)
 
         if Inspection.objects.filter(pk=request.data['inspection'], owner=request.user).count() == 0:
             return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
