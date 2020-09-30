@@ -10,12 +10,15 @@ from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db.models import Q
+
+from finances.models import FactoryPlan
 from organizations.models import UserAuthority, AdminGroup, AdminUser
 from plusco.pagination import PaginationHandlerMixin
 from .serializers import *
 from rest_framework import status
 from ..models import *
 from fcm_django.models import FCMDevice
+import datetime
 
 
 class BasicPagination(PageNumberPagination):
@@ -110,6 +113,12 @@ class ConformityMyBoardView(APIView, PaginationHandlerMixin):
 
 class ConformityView(APIView):
     def post(self, request, format=None):
+        authority = UserAuthority.objects.filter(user=request.user, is_active=True, status_id__in=[1, 4]).first()
+        plan = FactoryPlan.objects.filter(start_date__lte=datetime.datetime.now(), end_date__gt=datetime.datetime.now(),
+                                   is_success=True, factory=authority.department.factory).order_by('id').first()
+        if plan == None:
+            return Response({"status": False, 'message': "دسترسی کارگاه محدودیت دارد"}, status=status.HTTP_403_FORBIDDEN)
+
         if Inspection.objects.filter(pk=request.data['inspection'], owner=request.user).count() == 0:
             return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
         files = request.data.pop('files')

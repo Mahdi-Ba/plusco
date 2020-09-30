@@ -27,9 +27,13 @@ def send_request(factory_plan):
 
 def verify(request):
     if request.GET.get('Status') == 'OK':
-        result = client.service.PaymentVerification(MERCHANT, request.GET['Authority'], amount)
+        factory_plan = FactoryPlan.objects.filter(id=request.GET['id']).first()
+        if factory_plan == None:
+            return render(request, 'callback/index.html', {'transaction': request.GET['id'], 'status': False,
+                                                           'message': 'خطا در انجام تراکنش '})
+
+        result = client.service.PaymentVerification(MERCHANT, request.GET['Authority'], factory_plan.price_with_tax)
         if result.Status == 100:
-            factory_plan = FactoryPlan.objects.get(id=request.GET['id'])
             if factory_plan.increase_count > 0:
                 factory_plan.count += factory_plan.increase_count
             factory_plan.is_success = True
