@@ -10,6 +10,8 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
+
+from finances.models import FactoryPlan
 from .serializers import *
 from rest_framework import status
 from ..models import *
@@ -128,6 +130,16 @@ class DepartmentMemberByAdminView(APIView):
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
 
         factory = authority.department.factory
+        plan = FactoryPlan.objects.filter(start_date__lte=datetime.datetime.now(), end_date__gt=datetime.datetime.now(),
+                                          is_success=True, factory=factory).order_by('id').first()
+        if plan == None:
+            return Response({"status": False, 'message': "بسته فعالی برای کارگاه وجود ندارد"},
+                            status=status.HTTP_401_UNAUTHORIZED)
+        if plan.count < UserAuthority.objects.filter(department__factory=factory, status_id__in=[1,4], is_active=True).count():
+            return Response({"status": False, 'message': "تعداد نفرات کارگاه بیشتر از حد مجاز"},
+                            status=status.HTTP_401_UNAUTHORIZED)
+
+
         if Department.objects.get(pk=request.data['department']).factory != factory:
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         # admin_group = AdminGroup.objects.get(factory=factory)
@@ -172,6 +184,18 @@ class DepartmentMemberByAdminView(APIView):
 
         authority = UserAuthority.objects.get(id=request.data['member_id'])
         data = DepartmentMemberSerilizer(authority, data=request.data)
+        if 'status_item' in request.data:
+            if request.data['status_item'] == '1' or request.data['status_item'] == '4':
+                plan = FactoryPlan.objects.filter(start_date__lte=datetime.datetime.now(),
+                                                  end_date__gt=datetime.datetime.now(),
+                                                  is_success=True, factory=authority.department.factory).order_by('id').first()
+                if plan == None:
+                    return Response({"status": False, 'message': "بسته فعالی برای کارگاه وجود ندارد"},
+                                    status=status.HTTP_401_UNAUTHORIZED)
+                if plan.count < UserAuthority.objects.filter(department__factory=authority.department.factory, status_id__in=[1,4],
+                                                             is_active=True).count():
+                    return Response({"status": False, 'message': "تعداد نفرات کارگاه بیشتر از حد مجاز"},
+                                    status=status.HTTP_401_UNAUTHORIZED)
         if data.is_valid():
             instance = data.save()
             if 'status_item' in request.data:
