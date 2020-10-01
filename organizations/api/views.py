@@ -60,7 +60,7 @@ class FactoryView(APIView, PaginationHandlerMixin):
             factory = data.save(owner=request.user)
             admin_group = AdminGroup.objects.create(owner=request.user, factory=factory)
             AdminUser.objects.create(user=request.user, admin_group=admin_group)
-            Department.objects.create(owner=request.user, title="HSC", factory=factory)
+            Department.objects.create(owner=request.user, title="HSE", factory=factory)
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
