@@ -13,7 +13,7 @@ class ConformityGallerySerilizer(serializers.ModelSerializer):
 
     class Meta:
         model = ConformityGallery
-        fields = ['file']
+        fields = ['id','file']
 
 
 class ActionGallerySerilizer(serializers.ModelSerializer):
@@ -21,7 +21,7 @@ class ActionGallerySerilizer(serializers.ModelSerializer):
 
     class Meta:
         model = ActionGallery
-        fields = ['file']
+        fields = ['id','file']
 
 
 class StatusSerilizer(serializers.ModelSerializer):

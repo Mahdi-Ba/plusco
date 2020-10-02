@@ -111,6 +111,17 @@ class ConformityMyBoardView(APIView, PaginationHandlerMixin):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class ConformityImageView(APIView):
+    def delete(self, request, pk, format=None):
+        gallery = ConformityGallery.objects.filter(conformity__inspection__owner=request.user, id=pk).first()
+        if gallery == None:
+            return Response({'success': False, 'message': 'شما دسترسی به این فایل ندارید'}, status.HTTP_403_FORBIDDEN)
+        gallery.file.delete()
+        gallery.delete()
+        return Response({'success': True, 'message': 'با موفقیت حذف شد'})
+
+
+
 class ConformityView(APIView):
     def post(self, request, format=None):
         authority = UserAuthority.objects.filter(user=request.user, is_active=True, status_id__in=[1, 4]).first()
@@ -118,9 +129,10 @@ class ConformityView(APIView):
             return Response({"status": False, 'message': "دسترسی وجود ندارد"}, status=status.HTTP_403_FORBIDDEN)
 
         plan = FactoryPlan.objects.filter(start_date__lte=datetime.datetime.now(), end_date__gt=datetime.datetime.now(),
-                                   is_success=True, factory=authority.department.factory).order_by('id').first()
+                                          is_success=True, factory=authority.department.factory).order_by('id').first()
         if plan == None:
-            return Response({"status": False, 'message': "بسته فعالی برای کارگاه وجود ندارد"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"status": False, 'message': "بسته فعالی برای کارگاه وجود ندارد"},
+                            status=status.HTTP_401_UNAUTHORIZED)
 
         if Inspection.objects.filter(pk=request.data['inspection'], owner=request.user).count() == 0:
             return Response({"status": False, 'message': "دسترسی ندارید"}, status=status.HTTP_403_FORBIDDEN)
@@ -272,6 +284,15 @@ class ActionView(APIView):
             return Response(action.data, status=status.HTTP_200_OK)
         return Response(action.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class ActionImageView(APIView):
+    def delete(self, request, pk, format=None):
+        gallery = ActionGallery.objects.filter(action__execute_owner=request.user, id=pk).first()
+        if gallery == None:
+            return Response({'success': False, 'message': 'شما دسترسی به این فایل ندارید'}, status.HTTP_403_FORBIDDEN)
+        gallery.file.delete()
+        gallery.delete()
+        return Response({'success': True, 'message': 'با موفقیت حذف شد'})
 
 class ActionReplyView(APIView):
     def post(self, request, format=None):
