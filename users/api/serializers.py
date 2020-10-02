@@ -7,7 +7,7 @@ class UserSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(max_length=200, required=False)
     last_name = serializers.CharField(max_length=200, required=False)
     national_code = serializers.CharField(max_length=200, required=False,allow_blank=True)
-    birth_date = serializers.CharField(required=False)
+    birth_date = serializers.CharField(required=False,allow_null=True,allow_blank=True)
     mobile = serializers.CharField(read_only=False, required=False)
     file = serializers.ImageField(required=False, allow_null=True)
     expire_pass = serializers.BooleanField(required=False)
