@@ -42,6 +42,11 @@ class NowPlanView(APIView):
         factory = UserAuthority.objects.get(user=request.user, is_active=True).department.factory
         data = FactoryPlan.objects.filter(start_date__lte=datetime.datetime.now(), end_date__gt=datetime.datetime.now(),
                                           is_success=True, factory=factory).order_by('id').first()
+        if data == None:
+            return Response({
+                'success':False,
+                'message':'not found'
+            },status.HTTP_404_NOT_FOUND)
         serilizer = FactoryPlanSerilizer(data, many=False)
         return Response(serilizer.data)
 
