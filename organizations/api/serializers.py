@@ -111,8 +111,9 @@ class DepartmentMemberSerilizer(serializers.ModelSerializer):
         instance.user = instance.user
         if validated_data.get('status', False):
             instance.status_id = validated_data['status']
-        if validated_data.get('position', False):
-            instance.position = Position.objects.get(pk=validated_data['position'])
+        # if validated_data.get('position', False):
+        #     instance.position = Position.objects.get(pk=validated_data['position'])
+        instance.position = validated_data.get('position', instance.position)
         instance.name = validated_data.get('name', instance.name)
         instance.family = validated_data.get('family', instance.family)
         instance.national_code = validated_data.get('national_code', instance.national_code)

@@ -130,7 +130,7 @@ class DepartmentMemberByAdminView(APIView):
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
 
         factory = authority.department.factory
-        plan = FactoryPlan.objects.filter(start_date__lte=datetime.datetime.now(), end_date__gt=datetime.datetime.now(),
+        plan = FactoryPlan.objects.filter(start_date__lte=datetime.now(), end_date__gt=datetime.now(),
                                           is_success=True, factory=factory).order_by('id').first()
         if plan == None:
             return Response({"status": False, 'message': "بسته فعالی برای کارگاه وجود ندارد"},
@@ -158,7 +158,7 @@ class DepartmentMemberByAdminView(APIView):
                                                       email=request.data.get('email', None),
                                                       phone=request.data.get('phone', None),
                                                       education=request.data.get('education', None),
-                                                      position_id=request.data.get('position', None),
+                                                      position=request.data.get('position', None),
 
                                                       )
         device = FCMDevice.objects.filter(user_id=user.id).all()
@@ -186,8 +186,8 @@ class DepartmentMemberByAdminView(APIView):
         data = DepartmentMemberSerilizer(authority, data=request.data)
         if 'status_item' in request.data:
             if request.data['status_item'] == '1' or request.data['status_item'] == '4':
-                plan = FactoryPlan.objects.filter(start_date__lte=datetime.datetime.now(),
-                                                  end_date__gt=datetime.datetime.now(),
+                plan = FactoryPlan.objects.filter(start_date__lte=datetime.now(),
+                                                  end_date__gt=datetime.now(),
                                                   is_success=True, factory=authority.department.factory).order_by('id').first()
                 if plan == None:
                     return Response({"status": False, 'message': "بسته فعالی برای کارگاه وجود ندارد"},

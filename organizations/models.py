@@ -192,7 +192,8 @@ class Position(models.Model):
 class UserAuthority(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True)
-    position = models.ForeignKey(Position, on_delete=models.CASCADE, null=True, blank=True)
+    # position = models.ForeignKey(Position, on_delete=models.CASCADE, null=True, blank=True)
+    position = models.CharField(null=True, blank=True,max_length=255)
     status = models.ForeignKey(Status, on_delete=models.CASCADE, null=True, blank=True)
     is_active = models.BooleanField(default=False)
     name = models.CharField(null=True, blank=True,max_length=255)

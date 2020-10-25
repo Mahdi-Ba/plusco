@@ -149,10 +149,10 @@ class FactoryAdmin(admin.ModelAdmin):
         super().save_formset(request, form, formset, change)
 
 
-class AuthorityModel(admin.TabularInline):
-    autocomplete_fields = ['user', 'department', 'status','position']
-    model = UserAuthority
-    extra = 1
+# class AuthorityModel(admin.TabularInline):
+#     autocomplete_fields = ['user', 'department', 'status','position']
+#     model = UserAuthority
+#     extra = 1
 
 class PositionModel(admin.TabularInline):
     list_display = ['title']
@@ -162,7 +162,8 @@ class PositionModel(admin.TabularInline):
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
-    inlines = (AuthorityModel,PositionModel)
+    # inlines = (AuthorityModel,PositionModel)
+    inlines = (PositionModel,)
 
     list_display = ['title', 'user', 'status', 'factory']
     search_fields = ['title', ]

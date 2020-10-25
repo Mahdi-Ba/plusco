@@ -161,3 +161,9 @@ class UserDetail(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ImageRemove(APIView):
+    def delete(self, request, pk=0, format=None):
+        user = request.user
+        user.file.delete()
+        return Response({'success':True},status.HTTP_200_OK)
