@@ -102,8 +102,8 @@ class DepartmentMemberSerilizer(serializers.ModelSerializer):
     def create(self, validate_data):
         validate_data['user'] = User.objects.get(id=int(validate_data['user']))
         validate_data['department'] = Department.objects.get(pk=validate_data['department'])
-        if validate_data.get('position', False):
-            validate_data['position'] = Position.objects.get(pk=validate_data['position'])
+        # if validate_data.get('position', False):
+        #     validate_data['position'] = Position.objects.get(pk=validate_data['position'])
         data = UserAuthority.objects.create(**validate_data)
         return data
 
