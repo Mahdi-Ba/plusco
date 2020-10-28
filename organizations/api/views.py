@@ -429,7 +429,8 @@ class RelationInspectionView(APIView):
         serializers = RelationSerilizer(relation, many=True)
         # relation_target = Relation.objects.filter(target=authority.department.factory.id, status_id=1).first()
 
-        relation_target = Relation(owner=request.user,target=authority.department.factory,status_id=1)
+        # relation_target = Relation(owner=request.user,target=authority.department.factory,status_id=1)
+        relation_target = Relation(target=authority.department.factory,status_id=1)
         serializers_target = RelationSerilizer(relation_target, many=False)
         return Response({'dest': serializers.data, 'src': serializers_target.data})
 
