@@ -1,50 +1,44 @@
-from django.utils.text import slugify
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
-# from organizations.api.serializers import PartSerilizer
-from organizations.api.serializers import PartSerilizer, FactorySerilizer, DepartmentSerilizer
+from organizations.api.serializers import FactorySerializer, DepartmentSerializer
 from users.api.serializers import BriefUser
 from ..models import *
-from django.urls import reverse
 
 
-class ConformityGallerySerilizer(serializers.ModelSerializer):
+class ConformityGallerySerializer(serializers.ModelSerializer):
     file = serializers.FileField()
 
     class Meta:
         model = ConformityGallery
-        fields = ['id','file']
+        fields = ['id', 'file']
 
 
-class ActionGallerySerilizer(serializers.ModelSerializer):
+class ActionGallerySerializer(serializers.ModelSerializer):
     file = serializers.FileField()
 
     class Meta:
         model = ActionGallery
-        fields = ['id','file']
+        fields = ['id', 'file']
 
 
-class StatusSerilizer(serializers.ModelSerializer):
+class StatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Status
         fields = ['id', 'title']
 
 
-class ActionSerilizer(serializers.ModelSerializer):
+class ActionSerializer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=False)
     reply_text = serializers.CharField(max_length=1000, required=False)
     execute_owner = serializers.ReadOnlyField(required=False, source='execute_owner.mobile', allow_null=True)
     execute_owner_detail = BriefUser(many=False, required=False, read_only=True, source='execute_owner')
-    receiver_department = serializers.CharField(required=False,read_only=True,source='conformity.receiver_department')
+    receiver_department = serializers.CharField(required=False, read_only=True, source='conformity.receiver_department')
     owner = serializers.ReadOnlyField(required=False, source='conformity.inspection.mobile')
     owner_detail = BriefUser(many=False, required=False, read_only=True, source='conformity.inspection.mobile')
     due_date = serializers.DateField(required=False, format="%s")
     conformity = serializers.CharField(required=False)
     conformity_id = serializers.IntegerField(source='conformity.id', read_only=True)
-    action_gallery = ActionGallerySerilizer(read_only=True, many=True)
+    action_gallery = ActionGallerySerializer(read_only=True, many=True)
     status = serializers.CharField(required=False)
-
-
 
     # owner_factory = FactorySerilizer(required=False, many=False)
     # text = serializers.CharField(max_length=1000, required=False)
@@ -77,7 +71,7 @@ class ActionSerilizer(serializers.ModelSerializer):
         return data
 
 
-class ConformitySerilizer(serializers.ModelSerializer):
+class ConformitySerializer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=False)
     text = serializers.CharField()
     owner = serializers.ReadOnlyField(source='inspection.owner.mobile')
@@ -87,14 +81,14 @@ class ConformitySerilizer(serializers.ModelSerializer):
     inspection = serializers.CharField(required=False)
     inspection_id = serializers.IntegerField(source='inspection.id', read_only=True)
     receiver_department = serializers.CharField(write_only=True)
-    receiver_department_detail = DepartmentSerilizer(required=False, many=False, source='receiver_department')
+    receiver_department_detail = DepartmentSerializer(required=False, many=False, source='receiver_department')
     priority = serializers.IntegerField()
     status = serializers.CharField(required=False)
     is_conformity = serializers.BooleanField()
-    conformity_gallery = ConformityGallerySerilizer(read_only=True, many=True)
+    conformity_gallery = ConformityGallerySerializer(read_only=True, many=True)
     date = serializers.DateField(required=False, format="%s")
     due_date = serializers.DateField(required=False, format="%s")
-    action = ActionSerilizer(read_only=True, many=True)
+    action = ActionSerializer(read_only=True, many=True)
 
     # owner_factory = FactorySerilizer(required=False, many=False)
     # part = serializers.CharField(write_only=True)
@@ -142,7 +136,7 @@ class ConformitySerilizer(serializers.ModelSerializer):
         return data
 
 
-class ConformityBriefSerilizer(serializers.ModelSerializer):
+class ConformityBriefSerializer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=False)
     text = serializers.CharField()
     owner = serializers.ReadOnlyField(source='inspection.owner.mobile')
@@ -152,11 +146,11 @@ class ConformityBriefSerilizer(serializers.ModelSerializer):
     inspection = serializers.CharField(required=False)
     inspection_id = serializers.IntegerField(source='inspection.id', read_only=True)
     receiver_department = serializers.CharField(write_only=True)
-    receiver_department_detail = DepartmentSerilizer(required=False, many=False, source='receiver_department')
+    receiver_department_detail = DepartmentSerializer(required=False, many=False, source='receiver_department')
     priority = serializers.IntegerField()
     status = serializers.CharField(required=False)
     is_conformity = serializers.BooleanField()
-    conformity_gallery = ConformityGallerySerilizer(read_only=True, many=True)
+    conformity_gallery = ConformityGallerySerializer(read_only=True, many=True)
     date = serializers.DateField(required=False, format="%s", read_only=True)
     due_date = serializers.DateField(required=False, format="%s")
 
@@ -196,13 +190,13 @@ class ConformityBriefSerilizer(serializers.ModelSerializer):
     #     return Action.objects.filter(conformity=obj).count()
 
 
-class InspectionSerilizer(serializers.ModelSerializer):
+class InspectionSerializer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=False)
     owner = serializers.ReadOnlyField(source='owner.mobile')
     owner_detail = BriefUser(many=False, required=False, read_only=True, source='owner')
-    owner_factory = FactorySerilizer(required=False, many=False)
+    owner_factory = FactorySerializer(required=False, many=False)
     receiver_factory = serializers.CharField(write_only=True, required=False)
-    receiver_factory_detail = FactorySerilizer(required=False, many=False, source='receiver_factory')
+    receiver_factory_detail = FactorySerializer(required=False, many=False, source='receiver_factory')
     is_archive = serializers.BooleanField(required=False)
     conformity_count = serializers.SerializerMethodField()
 
@@ -218,7 +212,8 @@ class InspectionSerilizer(serializers.ModelSerializer):
                   'is_archive', 'conformity_count',
                   ]
 
-    def get_conformity_count(self, obj):
+    @staticmethod
+    def get_conformity_count(obj):
         return Conformity.objects.filter(inspection=obj).count()
 
     def create(self, validate_data):
@@ -227,16 +222,16 @@ class InspectionSerilizer(serializers.ModelSerializer):
         return data
 
 
-class InspectionDetailSerilizer(serializers.ModelSerializer):
+class InspectionDetailSerializer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=False)
     owner = serializers.ReadOnlyField(source='owner.mobile')
     owner_detail = BriefUser(many=False, required=False, read_only=True, source='owner')
-    owner_factory = FactorySerilizer(required=False, many=False)
+    owner_factory = FactorySerializer(required=False, many=False)
     receiver_factory = serializers.CharField(write_only=True, required=False)
-    receiver_factory_detail = FactorySerilizer(required=False, many=False, source='receiver_factory')
+    receiver_factory_detail = FactorySerializer(required=False, many=False, source='receiver_factory')
     is_archive = serializers.BooleanField(required=False)
     conformity_count = serializers.SerializerMethodField()
-    conformity = ConformitySerilizer(read_only=True, many=True)
+    conformity = ConformitySerializer(read_only=True, many=True)
 
     class Meta:
         model = Inspection
@@ -251,5 +246,6 @@ class InspectionDetailSerilizer(serializers.ModelSerializer):
                   'conformity'
                   ]
 
-    def get_conformity_count(self, obj):
+    @staticmethod
+    def get_conformity_count(obj):
         return Conformity.objects.filter(inspection=obj).count()

@@ -2,6 +2,7 @@ from django.db import models
 from django.template.defaultfilters import slugify
 from ckeditor.fields import RichTextField
 
+
 # Create your models here.
 
 class Page(models.Model):
@@ -18,8 +19,6 @@ class Page(models.Model):
         if not self.slug:
             self.slug = slugify(self.title)
         return super().save(*args, **kwargs)
-
-
 
 # class MyImage(models.Model):
 #     file = models.FileField()

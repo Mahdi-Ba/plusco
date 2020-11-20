@@ -10,15 +10,15 @@ from rest_framework.permissions import AllowAny
 import random
 from rest_framework_jwt.settings import api_settings
 from rest_framework_jwt.views import ObtainJSONWebToken
+from django.core.files.base import ContentFile
+
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
-from django.core.files.base import ContentFile
 
 
 @permission_classes((AllowAny,))
 class NewPasswd(APIView):
-
 
     def post(self, request):
         mobile = request.data['mobile']
@@ -162,8 +162,9 @@ class UserDetail(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class ImageRemove(APIView):
     def delete(self, request, pk=0, format=None):
         user = request.user
         user.file.delete()
-        return Response({'success':True},status.HTTP_200_OK)
+        return Response({'success': True}, status.HTTP_200_OK)

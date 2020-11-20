@@ -22,4 +22,5 @@ coverage.*
 plusco/settings.py
 /media
 /venv/
-
+db.sqlite3
+/migrations/

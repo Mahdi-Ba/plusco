@@ -1,16 +1,10 @@
 import base64
 import random
 import uuid
-from dbm import error
-
 from django.core.files.base import ContentFile
 from django.db.models import Q
-from django.http import Http404
-from rest_framework.decorators import permission_classes
-from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
 from finances.models import FactoryPlan
 from .serializers import *
 from rest_framework import status
@@ -27,8 +21,8 @@ class BasicPagination(PageNumberPagination):
 class OrganizationView(APIView):
     def get(self, request, format=None):
         data = Organization.objects.filter(title__contains=request.GET['item']).all()
-        serilizer = OrgSerilizer(data, many=True)
-        return Response(serilizer.data)
+        serializer = OrgSerializer(data, many=True)
+        return Response(serializer.data)
 
     def post(self, request, format=None):
         if request.data.get('image', False):
@@ -37,7 +31,7 @@ class OrganizationView(APIView):
             ext = format.split('/')[-1]
             image = ContentFile(base64.b64decode(imgstr), name=str(uuid.uuid4()) + "." + ext)
             request.data['image'] = image
-        data = OrgSerilizer(data=request.data)
+        data = OrgSerializer(data=request.data)
         if data.is_valid():
             data.save(owner=request.user)
             return Response(data.data, status=status.HTTP_200_OK)
@@ -47,15 +41,15 @@ class OrganizationView(APIView):
 class OrgFactoryView(APIView):
     def get(self, request, pk, format=None):
         data = Factory.objects.filter(organization__exact=pk, title__contains=request.GET['item']).all()
-        serilizer = FactorySerilizer(data, many=True)
-        return Response(serilizer.data)
+        serializer = FactorySerializer(data, many=True)
+        return Response(serializer.data)
 
 
 class FactoryView(APIView, PaginationHandlerMixin):
     pagination_class = BasicPagination
 
     def post(self, request, format=None):
-        data = FactorySerilizer(data=request.data)
+        data = FactorySerializer(data=request.data)
         if data.is_valid():
             factory = data.save(owner=request.user)
             admin_group = AdminGroup.objects.create(owner=request.user, factory=factory)
@@ -69,10 +63,10 @@ class FactoryView(APIView, PaginationHandlerMixin):
             Q(title__contains=request.GET['item']) | Q(organization__title__contains=request.GET['item'])).all()
         data = self.paginate_queryset(data)
         if data is not None:
-            serilizer = self.get_paginated_response(FactorySerilizer(data, many=True).data)
+            serializer = self.get_paginated_response(FactorySerializer(data, many=True).data)
         else:
-            serilizer = FactorySerilizer(data, many=True)
-        return Response(serilizer.data)
+            serializer = FactorySerializer(data, many=True)
+        return Response(serializer.data)
 
 
 class DepartmentView(APIView):
@@ -80,12 +74,12 @@ class DepartmentView(APIView):
         records = []
         for item in request.data['title']:
             request.data['title'] = item
-            data = DepartmentSerilizer(data=request.data)
+            data = DepartmentSerializer(data=request.data)
             if data.is_valid():
                 record = data.save(owner=request.user)
                 records.append(record.id)
         departments = Department.objects.filter(id__in=records)
-        data = DepartmentSerilizer(departments, many=True)
+        data = DepartmentSerializer(departments, many=True)
         return Response(data.data, status=status.HTTP_200_OK)
         # return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -93,23 +87,22 @@ class DepartmentView(APIView):
         authority = UserAuthority.objects.filter(user=request.user, status_id__in=[1, 4], is_active=True).first()
         if authority == None:
             return Response({'success': False}, status=status.HTTP_404_NOT_FOUND)
-        authority = DepartmentMemberSerilizer(authority, many=False)
+        authority = DepartmentMemberSerializer(authority, many=False)
         return Response(authority.data, status=status.HTTP_200_OK)
 
 
 class DepartmentPositioView(APIView):
     def get(self, request, pk, format=None):
         data = Position.objects.filter(department__exact=pk).all()
-        serilizer = PositionSerilizer(data, many=True)
-        return Response(serilizer.data)
+        serializer = PositionSerializer(data, many=True)
+        return Response(serializer.data)
 
 
 class StatusView(APIView):
     def get(self, request, format=None):
         data = Status.objects.all()
-        serilizer = StatusSerilizer(data, many=True)
-        return Response(serilizer.data)
-
+        serializer = StatusSerializer(data, many=True)
+        return Response(serializer.data)
 
 
 class FactoryMembersView(APIView):
@@ -117,7 +110,7 @@ class FactoryMembersView(APIView):
         factory = UserAuthority.objects.get(Q(user=request.user, is_active=True) & ~Q(status_id=2)).department.factory
         users = UserAuthority.objects.filter(department__factory=factory).all()
         if users:
-            authority = DepartmentMemberSerilizer(users, many=True)
+            authority = DepartmentMemberSerializer(users, many=True)
             return Response(authority.data, status=status.HTTP_200_OK)
         else:
             return Response({"status": False, 'message': "Not Found"}, status=status.HTTP_404_NOT_FOUND)
@@ -135,10 +128,10 @@ class DepartmentMemberByAdminView(APIView):
         if plan == None:
             return Response({"status": False, 'message': "بسته فعالی برای کارگاه وجود ندارد"},
                             status=status.HTTP_401_UNAUTHORIZED)
-        if plan.count < UserAuthority.objects.filter(department__factory=factory, status_id__in=[1,4], is_active=True).count():
+        if plan.count < UserAuthority.objects.filter(department__factory=factory, status_id__in=[1, 4],
+                                                     is_active=True).count():
             return Response({"status": False, 'message': "تعداد نفرات کارگاه بیشتر از حد مجاز"},
                             status=status.HTTP_401_UNAUTHORIZED)
-
 
         if Department.objects.get(pk=request.data['department']).factory != factory:
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
@@ -169,7 +162,7 @@ class DepartmentMemberByAdminView(APIView):
         }
         device.send_message(title='تقاضای عضویت', body='عضویت شما تایید شد', data=payload)
 
-        return Response(DepartmentMemberSerilizer(user_authority, many=False).data)
+        return Response(DepartmentMemberSerializer(user_authority, many=False).data)
 
     def put(self, request, format=None):
         admin = UserAuthority.objects.filter(user=request.user, is_active=True, status_id=4).first()
@@ -183,16 +176,18 @@ class DepartmentMemberByAdminView(APIView):
             return Response({'success': False, 'message': 'دسترسی ندارد'}, status=status.HTTP_403_FORBIDDEN)
 
         authority = UserAuthority.objects.get(id=request.data['member_id'])
-        data = DepartmentMemberSerilizer(authority, data=request.data)
+        data = DepartmentMemberSerializer(authority, data=request.data)
         if 'status_item' in request.data:
             if request.data['status_item'] == '1' or request.data['status_item'] == '4':
                 plan = FactoryPlan.objects.filter(start_date__lte=datetime.now(),
                                                   end_date__gt=datetime.now(),
-                                                  is_success=True, factory=authority.department.factory).order_by('id').first()
+                                                  is_success=True, factory=authority.department.factory).order_by(
+                    'id').first()
                 if plan == None:
                     return Response({"status": False, 'message': "بسته فعالی برای کارگاه وجود ندارد"},
                                     status=status.HTTP_401_UNAUTHORIZED)
-                if plan.count < UserAuthority.objects.filter(department__factory=authority.department.factory, status_id__in=[1,4],
+                if plan.count < UserAuthority.objects.filter(department__factory=authority.department.factory,
+                                                             status_id__in=[1, 4],
                                                              is_active=True).count():
                     return Response({"status": False, 'message': "تعداد نفرات کارگاه بیشتر از حد مجاز"},
                                     status=status.HTTP_401_UNAUTHORIZED)
@@ -211,9 +206,6 @@ class DepartmentMemberByAdminView(APIView):
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
-
 class DepartmentSwitchView(APIView):
     def put(self, request, format=None):
         authority = UserAuthority.objects.get(pk=request.data['member_id'], user=request.user)
@@ -222,15 +214,15 @@ class DepartmentSwitchView(APIView):
             item.save()
         authority.is_active = True
         authority.save()
-        serilizer = DepartmentMemberSerilizer(authority, many=False)
-        return Response(serilizer.data, status=status.HTTP_200_OK)
+        serializer = DepartmentMemberSerializer(authority, many=False)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class DepartmentMemberView(APIView):
     def get(self, request, format=None):
         if UserAuthority.objects.filter(user=request.user).exists():
             authority = UserAuthority.objects.filter(user=request.user).all()
-            authority = DepartmentMemberSerilizer(authority, many=True)
+            authority = DepartmentMemberSerializer(authority, many=True)
             return Response(authority.data, status=status.HTTP_200_OK)
         else:
             return Response({"status": False, 'message': "Not Found"}, status=status.HTTP_404_NOT_FOUND)
@@ -278,7 +270,7 @@ class DepartmentMemberView(APIView):
             }
             is_active = False
         request.data['user'] = str(request.user.id)
-        data = DepartmentMemberSerilizer(data=request.data)
+        data = DepartmentMemberSerializer(data=request.data)
         if data.is_valid():
             data.save(status_id=status_id, is_active=is_active)
             if send_notif == True:
@@ -293,7 +285,7 @@ class DepartmentMemberView(APIView):
             request.data.pop('status')
 
         authority = UserAuthority.objects.get(id=request.data['member_id'])
-        data = DepartmentMemberSerilizer(authority, data=request.data)
+        data = DepartmentMemberSerializer(authority, data=request.data)
         if data.is_valid():
             instance = data.save()
             return Response(data.data, status=status.HTTP_200_OK)
@@ -314,7 +306,7 @@ class NewRequestAuthorityMember(APIView):
             new_user = UserAuthority.objects.filter(
                 department=UserAuthority.objects.get(user=request.user, is_active=True).department,
                 status=2).all()
-            return Response(DepartmentMemberSerilizer(new_user, many=True).data)
+            return Response(DepartmentMemberSerializer(new_user, many=True).data)
 
     def post(self, request, format=None):
         factory = UserAuthority.objects.get(user=request.user, status_id=4, is_active=True).department.factory
@@ -355,20 +347,20 @@ class NewRequestAuthorityMember(APIView):
 class FactoryDepartmentView(APIView):
     def get(self, request, pk, format=None):
         data = Department.objects.filter(factory__exact=pk, title__contains=request.GET['item']).all()
-        serilizer = DepartmentSerilizer(data, many=True)
-        return Response(serilizer.data)
+        serializer = DepartmentSerializer(data, many=True)
+        return Response(serializer.data)
 
 
 class FactoryAreaView(APIView):
     def get(self, request, pk, format=None):
         data = Area.objects.filter(factory__exact=pk, title__contains=request.GET['item']).all()
-        serilizer = AreaSerilizer(data, many=True)
-        return Response(serilizer.data)
+        serializer = AreaSerializer(data, many=True)
+        return Response(serializer.data)
 
 
 class AreaView(APIView):
     def post(self, request, format=None):
-        data = AreaSerilizer(data=request.data)
+        data = AreaSerializer(data=request.data)
         if data.is_valid():
             data.save()
             return Response(data.data, status=status.HTTP_200_OK)
@@ -378,23 +370,23 @@ class AreaView(APIView):
 class PartAreaView(APIView):
     def get(self, request, pk, format=None):
         data = Part.objects.filter(area__exact=pk, title__contains=request.GET['item']).all()
-        serilizer = PartSerilizer(data, many=True)
-        return Response(serilizer.data)
+        serializer = PartSerializer(data, many=True)
+        return Response(serializer.data)
 
 
 class RelationTypeView(APIView):
     def get(self, request, format=None):
         data = RelationType.objects.all()
-        serilizer = RelationTypeSerilizer(data, many=True)
-        return Response(serilizer.data)
+        serializer = RelationTypeSerializer(data, many=True)
+        return Response(serializer.data)
 
 
 class AdminView(APIView):
     def get(self, request, format=None):
         admin_group = AdminGroup.objects.get(
             factory=UserAuthority.objects.get(user=request.user, is_active=True).department.factory)
-        serilizer = AdminGroupSerilizer(admin_group, many=False)
-        return Response(serilizer.data)
+        serializer = AdminGroupSerializer(admin_group, many=False)
+        return Response(serializer.data)
 
     def post(self, request, format=None):
         try:
@@ -403,8 +395,8 @@ class AdminView(APIView):
             user = User.objects.get(mobile__exact=request.data['mobile'])
             if not AdminUser.objects.filter(user=user, admin_group=admin_group).exists():
                 AdminUser.objects.create(user=user, admin_group=admin_group)
-            serilizer = AdminGroupSerilizer(admin_group, many=False)
-            return Response(serilizer.data)
+            serializer = AdminGroupSerializer(admin_group, many=False)
+            return Response(serializer.data)
         except Exception as e:
             return Response({'status': False, "debug": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -426,12 +418,12 @@ class RelationInspectionView(APIView):
         if authority == None:
             return Response({'success': False, 'message': 'کارگاه فعالی یاقت نشد'})
         relation = Relation.objects.filter(source=authority.department.factory.id, status_id=1, type__order=3).all()
-        serializers = RelationSerilizer(relation, many=True)
+        serializers = RelationSerializer(relation, many=True)
         # relation_target = Relation.objects.filter(target=authority.department.factory.id, status_id=1).first()
 
         # relation_target = Relation(owner=request.user,target=authority.department.factory,status_id=1)
-        relation_target = Relation(target=authority.department.factory,status_id=1)
-        serializers_target = RelationSerilizer(relation_target, many=False)
+        relation_target = Relation(target=authority.department.factory, status_id=1)
+        serializers_target = RelationSerializer(relation_target, many=False)
         return Response({'dest': serializers.data, 'src': serializers_target.data})
 
 
@@ -441,7 +433,7 @@ class RelationView(APIView):
         if authority == None:
             return Response({'success': False, 'message': 'کارگاه فعالی یاقت نشد'})
         relation = Relation.objects.filter(source=authority.department.factory.id, status_id=1).all()
-        serializers = RelationSerilizer(relation, many=True)
+        serializers = RelationSerializer(relation, many=True)
         data = {
             'depeartment_id': authority.department.id,
             'depeartment_name': authority.department.title,
@@ -470,62 +462,37 @@ class RelationView(APIView):
 
     def post(self, request, format=None):
 
-        # admin_group = AdminGroup.objects.get(
-        #     factory=UserAuthority.objects.get(user=request.user, status_id__in=[1, 4],
-        #                                       is_active=True).department.factory)
-        # if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
-        #     return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         authority = UserAuthority.objects.filter(user=request.user, is_active=True, status_id=4).first()
-        if authority == None:
+        if authority is None:
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
 
         request.data['source'] = str(authority.department.factory.id)
         if Relation.objects.filter(source=request.data['source'], target=request.data['target']).first() != None:
             return Response({"status": False, 'message': 'قبلا ثبت شده است'}, status=status.HTTP_400_BAD_REQUEST)
 
-        data = RelationSerilizer(data=request.data)
+        data = RelationSerializer(data=request.data)
         if data.is_valid():
             instance = data.save(owner=request.user, status_id=2)
             Relation.objects.create(source=instance.target, target=instance.source,
                                     type=RelationType.objects.get(id=request.data['type']).opposite_title, status_id=2)
-            # admin_user = AdminUser.objects.filter(
-            #     admin_group=AdminGroup.objects.get(factory_id=request.data['target'])).all().values_list('user_id',
-            #                                                                                              flat=True)
-            # device = FCMDevice.objects.filter(user_id__in=admin_user).all()
-            # payload = {
-            #     "type": "accept-relation",
-            #     "priority": "high",
-            #     "click_action": "FLUTTER_NOTIFICATION_CLICK"
-            # }
-            # device.send_message(title='تقاضای ذینفع', body='یک در خواست جدید  ثبت شد', data=payload)
             return Response(data.data, status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class NewRelationView(APIView):
     def get(self, request, format=None):
-        # admin_group = AdminGroup.objects.get(
-        #     factory=UserAuthority.objects.get(user=request.user, status_id__in=[1, 4],
-        #                                       is_active=True).department.factory)
-        # if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
-        #     return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         authority = UserAuthority.objects.get(user=request.user, is_active=True, status_id=4)
         relation = Relation.objects.filter(source=authority.department.factory, status_id=2, owner__isnull=True).all()
-        serializers = RelationSerilizer(relation, many=True)
+        serializers = RelationSerializer(relation, many=True)
         return Response(serializers.data)
 
     def post(self, request, format=None):
-        # admin_group = AdminGroup.objects.get(
-        #     factory=UserAuthority.objects.get(user=request.user, status_id__in=[1, 4],
-        #                                       is_active=True).department.factory)
-        # if not AdminUser.objects.filter(admin_group=admin_group, user=request.user).exists():
-        #     return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         if not Relation.objects.filter(pk=request.data['id'], owner__isnull=True).exists():
             return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
         else:
             if Relation.objects.filter(pk=request.data['id'],
                                        owner__isnull=True).first().source != UserAuthority.objects.get(
-                    user=request.user, status_id=4, is_active=True).department.factory:
+                user=request.user, status_id=4, is_active=True).department.factory:
                 return Response({"status": False, 'message': 'دسترسی ندارید'}, status=status.HTTP_403_FORBIDDEN)
 
             relation = Relation.objects.get(pk=request.data['id'], owner=None)
@@ -547,7 +514,7 @@ class NewRelationView(APIView):
 
 class PartView(APIView):
     def post(self, request, format=None):
-        data = PartSerilizer(data=request.data)
+        data = PartSerializer(data=request.data)
         if data.is_valid():
             data.save()
             return Response(data.data, status=status.HTTP_200_OK)
@@ -556,7 +523,7 @@ class PartView(APIView):
 
 class PositionView(APIView):
     def post(self, request, format=None):
-        data = PositionSerilizer(data=request.data)
+        data = PositionSerializer(data=request.data)
         if data.is_valid():
             data.save()
             return Response(data.data, status=status.HTTP_200_OK)

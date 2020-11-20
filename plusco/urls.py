@@ -32,20 +32,18 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
-
 schema_view = get_schema_view(
-   openapi.Info(
-      title="PLUSCO",
-      default_version='v1',
-      description="Test api",
-      terms_of_service="jobteam.ir",
-      contact=openapi.Contact(email="baharimahdi93@gmail.com"),
-      license=openapi.License(name="Mahdi Bahari"),
-   ),
-   public=True,
-   # permission_classes=(permissions.AllowAny,),
+    openapi.Info(
+        title="PLUSCO",
+        default_version='v1',
+        description="Test api",
+        terms_of_service="jobteam.ir",
+        contact=openapi.Contact(email="baharimahdi93@gmail.com"),
+        license=openapi.License(name="Mahdi Bahari"),
+    ),
+    public=True,
+    # permission_classes=(permissions.AllowAny,),
 )
-
 
 urlpatterns = [
 
@@ -53,14 +51,13 @@ urlpatterns = [
     url(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
-
     # url(r'^$', schema_view),
     path('admin/', admin.site.urls),
     path('ckeditor/', include('ckeditor_uploader.urls')),
     path('v1/users/', include('users.urls')),
     path('v1/pages/', include('pages.urls')),
-    path('v1/structure/',include('organizations.urls')),
-    path('v1/reports/',include('reports.urls')),
+    path('v1/structure/', include('organizations.urls')),
+    path('v1/reports/', include('reports.urls')),
     path('v1/fcm/', include('pluscofcm.urls')),
     path('v1/finances/', include('finances.urls')),
     path('v1/silk/', include('silk.urls', namespace='silk')),

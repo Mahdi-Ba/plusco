@@ -19,5 +19,5 @@ class FcmTestCase(GpayTestCase):
             'device_id': '123',
             'name': 'GardeshPayAndroidApp'
         }
-        res = self.client.post('/api/v1/fcm/devices',data)
+        res = self.client.post('/api/v1/fcm/devices', data)
         assert res.status_code == status.HTTP_201_CREATED

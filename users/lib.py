@@ -2,7 +2,7 @@ import requests
 
 
 class SmsNotify:
-    def __init__(self,**kwargs):
+    def __init__(self, **kwargs):
         url = "https://notify.gardeshpay.com/api/token/"
         payload = {
             "username": "app_agent",
@@ -12,7 +12,6 @@ class SmsNotify:
         response = requests.request("POST", url, json=payload, headers=headers)
         self.refresh = response.json()['refresh']
         self.access = response.json()['access']
-
 
     def send(self, **kwargs):
 

@@ -1,8 +1,7 @@
-from ckeditor_uploader.fields import RichTextUploadingField
 from django.db import models
 
 # Create your models here.
-from organizations.models import Factory, Category, Department, Part
+from organizations.models import Factory, Department
 from users.models import User
 
 
@@ -39,15 +38,6 @@ class Conformity(models.Model):
     due_date = models.DateField(null=True, blank=True)
     reporter = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 
-
-    # is_publish = models.BooleanField(default=True)
-    # publisher = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,related_name='publisher')
-    # category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True, blank=True)
-    # owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    #     # owner_factory = models.ForeignKey(Factory, on_delete=models.CASCADE, null=True, blank=True,related_name='owner_factory')
-    #     # receiver_factory = models.ForeignKey(Factory, on_delete=models.CASCADE, null=True, blank=True)
-    # part = models.ForeignKey(Part, on_delete=models.CASCADE, null=True, blank=True)
-
     def __str__(self):
         return self.text
 
@@ -77,17 +67,6 @@ class Action(models.Model):
     title = models.CharField(max_length=255, blank=True, null=True)
     reply_text = models.TextField(blank=True, null=True)
     due_date = models.DateField(null=True, blank=True)
-
-    # execute_department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True,
-    #                                        related_name='execute_dep')
-    # owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,related_name='action_owner')
-    # owner_factory = models.ForeignKey(Factory, on_delete=models.CASCADE, null=True, blank=True)
-    # is_publish = models.BooleanField(default=True)
-    # publisher = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    # followe_status = models.ForeignKey(ActionStatus, on_delete=models.CASCADE, null=True, blank=True,related_name='follower_status')
-    # follower_department = models.ForeignKey(Department, on_delete=models.CASCADE, null=True, blank=True,related_name='follower_dep')
-    # follower_owner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True,related_name='follower_owner')
-    # text = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.title

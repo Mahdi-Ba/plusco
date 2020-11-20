@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 
 
-
 # def update_blog():
 #     blog_data = Blog.objects.all()
 #     for data in blog_data:

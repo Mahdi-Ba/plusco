@@ -1,9 +1,7 @@
-from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 from fcm_django.models import FCMDevice
-from datetime import datetime, timedelta
+from datetime import timedelta
 from django.utils import timezone
 from users.models import User
 from rest_framework.decorators import permission_classes
@@ -24,16 +22,12 @@ class SendTestMessage(APIView):
             device.send_message(title=request.data['title'], body=request.data['body'], data=request.data['data'])
         return Response({"success": True, "send-data": request.data})
 
+
 class InboxMessages(APIView):
     def get(self, request, format=None):
         data = Message.objects.filter(user=request.user).all()
-        serilizer = MessageSerializer(data,many=True)
-        return Response(serilizer.data)
-
-
-
-
-
+        serializer = MessageSerializer(data, many=True)
+        return Response(serializer.data)
 
 
 @permission_classes((AllowAny,))
@@ -55,7 +49,8 @@ class CronMessage(APIView):
                         "description": "ورود شما را به خانواده گردش پی خوش آمد میگوییم",
                         "priority": "high",
                     }
-                    device.send_message(title='خوش آمدید', body='ورود شما را به خانواده گردش پی خوش آمد میگوییم',data=payload)
+                    device.send_message(title='خوش آمدید', body='ورود شما را به خانواده گردش پی خوش آمد میگوییم',
+                                        data=payload)
             users_query.update(say_hi=True)
             return Response({"status": True})
         except Exception:

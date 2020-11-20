@@ -1,12 +1,11 @@
-from django.http import HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import render
 from fcm_django.models import FCMDevice
 from zeep import Client
-
 from finances.models import FactoryPlan
 from organizations.models import UserAuthority
-from plusco.settings import BASE_URL
+from django.conf import settings
 
+BASE_URL = getattr(settings, "BASE_URL")
 MERCHANT = '329811de-8125-4fce-836d-a1f0d048c5e0'
 client = Client('https://www.zarinpal.com/pg/services/WebGate/wsdl')
 amount = 1000  # Toman / Required
@@ -28,7 +27,7 @@ def send_request(factory_plan):
 def verify(request):
     if request.GET.get('Status') == 'OK':
         factory_plan = FactoryPlan.objects.filter(id=request.GET['id']).first()
-        if factory_plan == None:
+        if factory_plan is None:
             return render(request, 'callback/index.html', {'transaction': request.GET['id'], 'status': False,
                                                            'message': 'خطا در انجام تراکنش '})
 

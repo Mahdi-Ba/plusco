@@ -1,35 +1,32 @@
-from django.utils.text import slugify
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
-
 from users.api.serializers import BriefUser
 from ..models import *
-from django.urls import reverse
 
 
-class OrgSerilizer(serializers.ModelSerializer):
+class OrgSerializer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=True,
                                   validators=[UniqueValidator(queryset=Organization.objects.all())])
-    image = serializers.FileField(required=False,allow_null=True)
-    province = serializers.CharField(max_length=255, required=False,allow_null=True)
-    city = serializers.CharField(max_length=255, required=False,allow_null=True)
-    phone = serializers.CharField(max_length=255, required=False,allow_null=True)
+    image = serializers.FileField(required=False, allow_null=True)
+    province = serializers.CharField(max_length=255, required=False, allow_null=True)
+    city = serializers.CharField(max_length=255, required=False, allow_null=True)
+    phone = serializers.CharField(max_length=255, required=False, allow_null=True)
 
     class Meta:
         model = Organization
         fields = ['id', 'title', 'image', 'province', 'city', 'phone']
 
 
-class FactorySerilizer(serializers.ModelSerializer):
+class FactorySerializer(serializers.ModelSerializer):
     owner = BriefUser(many=False, required=False, read_only=True)
     title = serializers.CharField(max_length=255, required=True)
     organization = serializers.CharField()
     org_image = serializers.ImageField(source='organization.image', required=False, read_only=True)
-    province = serializers.CharField(max_length=255, required=False,allow_null=True)
-    city = serializers.CharField(max_length=255, required=False,allow_null=True)
-    address = serializers.CharField(required=False,allow_null=True)
-    phone = serializers.CharField(max_length=255, required=False,allow_null=True)
-    rel_phone = serializers.CharField(max_length=255, required=False,allow_null=True)
+    province = serializers.CharField(max_length=255, required=False, allow_null=True)
+    city = serializers.CharField(max_length=255, required=False, allow_null=True)
+    address = serializers.CharField(required=False, allow_null=True)
+    phone = serializers.CharField(max_length=255, required=False, allow_null=True)
+    rel_phone = serializers.CharField(max_length=255, required=False, allow_null=True)
 
     class Meta:
         model = Factory
@@ -49,7 +46,7 @@ class FactorySerilizer(serializers.ModelSerializer):
         return data
 
 
-class DepartmentSerilizer(serializers.ModelSerializer):
+class DepartmentSerializer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=True)
     factory_title = serializers.CharField(source='factory.title', read_only=True)
     factory = serializers.CharField(write_only=True)
@@ -70,32 +67,33 @@ class DepartmentSerilizer(serializers.ModelSerializer):
         return data
 
 
-class StatusSerilizer(serializers.ModelSerializer):
+class StatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = Status
         fields = ['id', 'title']
 
 
-class DepartmentMemberSerilizer(serializers.ModelSerializer):
+class DepartmentMemberSerializer(serializers.ModelSerializer):
     user = serializers.CharField(required=False)
     user_detail = BriefUser(many=False, required=False, read_only=True, source='user')
     department = serializers.CharField(required=False)
     department_id = serializers.IntegerField(read_only=True)
-    position = serializers.CharField(required=False,allow_blank=True,allow_null=True)
+    position = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     status_title = serializers.CharField(read_only=True, source='status')
     status_item = serializers.IntegerField(required=False, write_only=True, source='status')
-    factory = FactorySerilizer(read_only=True, required=False, source='department.factory')
+    factory = FactorySerializer(read_only=True, required=False, source='department.factory')
     is_active = serializers.BooleanField(required=False)
-    name = serializers.CharField(required=False,allow_blank=True,allow_null=True)
-    family = serializers.CharField(required=False,allow_blank=True,allow_null=True)
-    national_code = serializers.CharField(required=False,allow_blank=True,allow_null=True)
-    email = serializers.EmailField(required=False,allow_blank=True,allow_null=True)
-    phone = serializers.CharField(required=False,allow_blank=True,allow_null=True)
-    education = serializers.CharField(required=False,allow_blank=True,allow_null=True)
+    name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    family = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    national_code = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
+    phone = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    education = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     class Meta:
         model = UserAuthority
-        fields = ['id', 'user', 'user_detail', 'department','department_id' ,'position', 'status', 'status_title', 'factory',
+        fields = ['id', 'user', 'user_detail', 'department', 'department_id', 'position', 'status', 'status_title',
+                  'factory',
                   'status_item', 'is_active', 'name', 'family', 'national_code', 'email', 'phone', 'education',
                   ]
 
@@ -124,7 +122,7 @@ class DepartmentMemberSerilizer(serializers.ModelSerializer):
         return instance
 
 
-class AreaSerilizer(serializers.ModelSerializer):
+class AreaSerializer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=True)
     factory_title = serializers.CharField(source='factory.title', read_only=True)
     factory = serializers.CharField(write_only=True)
@@ -145,7 +143,7 @@ class AreaSerilizer(serializers.ModelSerializer):
         return data
 
 
-class PartSerilizer(serializers.ModelSerializer):
+class PartSerializer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=True)
     area = serializers.CharField()
 
@@ -165,7 +163,7 @@ class PartSerilizer(serializers.ModelSerializer):
         return data
 
 
-class PositionSerilizer(serializers.ModelSerializer):
+class PositionSerializer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=255, required=True)
     department = serializers.CharField()
 
@@ -185,17 +183,17 @@ class PositionSerilizer(serializers.ModelSerializer):
         return data
 
 
-class RelationTypeSerilizer(serializers.ModelSerializer):
+class RelationTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = RelationType
         fields = ['id', 'title', ]
 
 
-class RelationSerilizer(serializers.ModelSerializer):
+class RelationSerializer(serializers.ModelSerializer):
     owner = BriefUser(many=False, required=False, read_only=True)
     source = serializers.CharField(write_only=True)
     target = serializers.CharField(write_only=True)
-    target_factory = FactorySerilizer(source='target', read_only=True)
+    target_factory = FactorySerializer(source='target', read_only=True)
     type = serializers.CharField()
     status_title = serializers.CharField(read_only=True, source='status')
 
@@ -218,7 +216,7 @@ class RelationSerilizer(serializers.ModelSerializer):
         return data
 
 
-class AdminUserSerilizer(serializers.ModelSerializer):
+class AdminUserSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.mobile')
     user_detail = BriefUser(many=False, required=False, read_only=True, source='user')
 
@@ -227,10 +225,10 @@ class AdminUserSerilizer(serializers.ModelSerializer):
         fields = ['user', 'user_detail']
 
 
-class AdminGroupSerilizer(serializers.ModelSerializer):
+class AdminGroupSerializer(serializers.ModelSerializer):
     owner_detail = BriefUser(many=False, required=False, read_only=True, source='owner')
     owner = serializers.ReadOnlyField(source='owner.mobile')
-    admin_user = AdminUserSerilizer(read_only=True, many=True)
+    admin_user = AdminUserSerializer(read_only=True, many=True)
 
     class Meta:
         model = AdminGroup
