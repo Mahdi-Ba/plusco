@@ -14,7 +14,7 @@ from .models import User
 class UserAdmin(DjangoUserAdmin):
     """Define admin model for custom User model with no mobile field."""
     # formfield_overrides = {
-    #     fields.JSONField: {'widget': JSONEditorWidget},
+    #     fields.JSONField: {'widget': JSONEditorWidget},a
     # }
     fieldsets = (
         (None, {'fields': ('mobile', 'password')}),

@@ -49,7 +49,6 @@ class User(AbstractUser):
     file = models.ImageField(upload_to='users/', blank=True, null=True)
     email = models.EmailField(null=True, blank=True)
     trusted = models.BooleanField(default=False)
-
     USERNAME_FIELD = 'mobile'
     REQUIRED_FIELDS = []
 
