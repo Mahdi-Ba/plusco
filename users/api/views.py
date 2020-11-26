@@ -1,79 +1,90 @@
 import base64
 import uuid
-from .serializers import *
+from random import random
+
+import kavenegar
+
+from . import serializers
 from ..models import User
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import permission_classes
-from rest_framework.views import APIView
+from rest_framework import views, generics
 from rest_framework.permissions import AllowAny
-import random
 from rest_framework_jwt.settings import api_settings
 from rest_framework_jwt.views import ObtainJSONWebToken
 from django.core.files.base import ContentFile
+
+from .. import models
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
 
 
-@permission_classes((AllowAny,))
-class NewPasswd(APIView):
-
-    def post(self, request):
-        mobile = request.data['mobile']
-        if len(mobile) < 10:
-            return Response({"status": False, "message": "incorrect mobile phone"}, 400)
-        mobile = "0" + mobile[-10:]
-        import kavenegar
-        import json
-        api_key = "4C48474D77574C4C385A7A737A48344B356A6B69726B6543717741396B32527A626C6D34774F654E5550633D"
-        api = kavenegar.KavenegarAPI(api_key)
-        new_pass = random.randint(11111, 99999)
-        params = {
-            'receptor': mobile,
-            'template': 'plasco',
-            'token': new_pass,
-            'type': 'sms',
-        }
-        response = api.verify_lookup(params)
-        if User.objects.filter(mobile=mobile):
-            u = User.objects.get(mobile=mobile)
-            u.set_password(new_pass)
-            u.expire_pass = True
-            u.save()
-        else:
-            user = User.objects.create_user(mobile, new_pass)
-        content = {"status": True}
-        return Response(content)
+class OTPCreateAPIView(generics.CreateAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = serializers.OTPCreateSerializer
 
 
-@permission_classes((AllowAny,))
-class WhichPasswd(APIView):
-    def post(self, request):
-        mobile = request.data['mobile']
-        if len(mobile) < 10:
-            return Response({"status": False, "message": "incorrect mobile phone"}, 400)
-        mobile = "0" + mobile[-10:]
-        if User.objects.filter(mobile=mobile).exists():
-            u = User.objects.get(mobile=mobile)
-            return Response({"status": True, "otp": u.expire_pass})
-        else:
-            return Response({"status": True, "otp": True})
+class ConfirmOtpAPIView(ObtainJSONWebToken):
+    serializer_class = serializers.ConfirmOTPSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request, mobile, *args, **kwargs):
+        """
+        for post request
+        give otp code and register user in site
+        """
+        try:
+            # to get user otp raw in database (last and only of them )
+            register_otp_obj = models.OTP.objects.filter(mobile=mobile).latest("create_time")
+            serializer = self.serializer_class(instance=register_otp_obj, data=request.data)
+            serializer.is_valid(raise_exception=True)  # validate code
+            user_qs = models.User.objects.filter(mobile=mobile)
+
+            if user_qs.exists():
+                user = user_qs.first()
+            else:
+                user = User.objects.create_user(mobile=mobile)
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except IndexError:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        except models.OTP.DoesNotExist:  # if OTP with this mobile number not exists
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
-class SetPasswd(APIView):
-    def post(self, request):
-        if request.data['password'] == request.data['password_confirm']:
-            request.user.set_password(request.data['password'])
-            request.user.expire_pass = False
-            request.user.save()
-            return Response({'success': True, 'message': "password change correctly"})
-        else:
-            return Response({'success': False,
-                             'message': 'Password and password_confirm not match',
-                             'data': request.data},
-                            status=status.HTTP_400_BAD_REQUEST)
+# @permission_classes((AllowAny,))
+# class NewPasswd(views.APIView):
+#
+#     def post(self, request):
+#         mobile = request.data['mobile']
+#         if len(mobile) < 10:
+#             return Response({"status": False, "message": "incorrect mobile phone"}, 400)
+#         mobile = "0" + mobile[-10:]
+#         api_key = "4C48474D77574C4C385A7A737A48344B356A6B69726B6543717741396B32527A626C6D34774F654E5550633D"
+#         api = kavenegar.KavenegarAPI(api_key)
+#         new_pass = random.randint(11111, 99999)
+#         params = {
+#             'receptor': mobile,
+#             'template': 'plasco',
+#             'token': new_pass,
+#             'type': 'sms',
+#         }
+#         response = api.verify_lookup(params)
+#         if User.objects.filter(mobile=mobile):
+#             u = User.objects.get(mobile=mobile)
+#             u.set_password(new_pass)
+#             u.expire_pass = True
+#             u.save()
+#         else:
+#             user = User.objects.create_user(mobile, new_pass)
+#         content = {"status": True}
+#         return Response(content)
 
 
 class CustomAuthToken(ObtainJSONWebToken):
@@ -115,21 +126,21 @@ class CustomAuthToken(ObtainJSONWebToken):
                                 status=status.HTTP_404_NOT_FOUND)
 
         user_model = User.objects.get(pk=user['user_id'])
-        user_serlize = UserSerializer(user_model)
+        user_serlize = serializers.UserSerializer(user_model)
         user_serlize_data = user_serlize.data
         user_serlize_data['token'] = token
         return Response({'success': True, "user": user_serlize_data}, status=status.HTTP_200_OK)
 
 
-class userInfo(APIView):
+class userInfo(views.APIView):
     def get(self, request):
         user = request.user
-        user_serlize = UserSerializer(user)
+        user_serlize = serializers.UserSerializer(user)
         user_serlize_data = user_serlize.data
         return Response(user_serlize_data)
 
 
-class ContactsCheck(APIView):
+class ContactsCheck(views.APIView):
     def post(self, request):
         input_contacts = set(request.data['contacts'])
         match_contacts = set()
@@ -143,7 +154,7 @@ class ContactsCheck(APIView):
         })
 
 
-class UserDetail(APIView):
+class UserDetail(views.APIView):
     def put(self, request, pk=0, format=None):
         user = request.user
         if request.data.get('file', False):
@@ -156,14 +167,14 @@ class UserDetail(APIView):
             else:
                 data = ContentFile(base64.b64decode(imgstr), name=str(uuid.uuid4()) + "." + ext)
             request.data['file'] = data
-        serializer = UserSerializer(user, data=request.data)
+        serializer = serializers.UserSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ImageRemove(APIView):
+class ImageRemove(views.APIView):
     def delete(self, request, pk=0, format=None):
         user = request.user
         user.file.delete()

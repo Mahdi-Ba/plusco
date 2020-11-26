@@ -2,9 +2,9 @@ from django.urls import path
 from .api import views
 
 urlpatterns = [
-    path('passwd/', views.NewPasswd.as_view(), name=None),
-    path('set-passwd/', views.SetPasswd.as_view(), name=None),
-    path('which-passwd/', views.WhichPasswd.as_view(), name=None),
+    path("otp/", views.OTPCreateAPIView.as_view(), name="send_otp"),
+    path("otp/confirm/<str:mobile>",views.ConfirmOtpAPIView.as_view()),
+    # path('passwd/', views.NewPasswd.as_view(), name=None),
     path('user-info/', views.userInfo.as_view(), name=None),
     path('contacts-check/', views.ContactsCheck.as_view(), name=None),
     path('api-token-auth/', views.CustomAuthToken.as_view(), name='api_token_auth'),
