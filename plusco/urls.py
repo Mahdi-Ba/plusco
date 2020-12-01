@@ -55,12 +55,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('ckeditor/', include('ckeditor_uploader.urls')),
     path('api/users/', include('users.urls')),
-    path('v1/pages/', include('pages.urls')),
-    path('v1/structure/', include('organizations.urls')),
-    path('v1/reports/', include('reports.urls')),
-    path('v1/fcm/', include('pluscofcm.urls')),
-    path('v1/finances/', include('finances.urls')),
-    path('v1/silk/', include('silk.urls', namespace='silk')),
+    # path('v1/pages/', include('pages.urls')),
+    # path('v1/structure/', include('organizations.urls')),
+    # path('v1/reports/', include('reports.urls')),
+    # path('v1/fcm/', include('pluscofcm.urls')),
+    # path('v1/finances/', include('finances.urls')),
+    # path('v1/silk/', include('silk.urls', namespace='silk')),
 
 ]
 
