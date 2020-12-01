@@ -56,7 +56,9 @@ class User(AbstractUser):
 
     @property
     def is_complete_registered(self):
-        if len(self.first_name) == 0 or len(self.last_name) == 0 or len(self.national_code) == 0:
+        if self.first_name is None or self.last_name is None:  # PROPOSED also national code
+            return False
+        if len(self.first_name) == 0 or len(self.last_name) == 0:
             return False
         return True
 

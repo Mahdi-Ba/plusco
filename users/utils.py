@@ -10,9 +10,9 @@ sms_service = getattr(settings, "SMS_SERVICE", True)
 def create_random_otp():
     if sms_service:
         otp = random.randint(11111, 99999)
-        return otp
+        return str(otp)
     else:
-        return 11111
+        return str(11111)
 
 
 def send_otp(otp: int, mobile):

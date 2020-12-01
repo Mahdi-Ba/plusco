@@ -162,6 +162,7 @@ class ConfirmOTPSerializer(Serializer):
         return otp
 
     def to_representation(self, instance):
+        # PROPOSED  do better and put a field for token
         user = models.User.objects.filter(mobile=instance.mobile).first()
 
         if user:
@@ -181,3 +182,9 @@ class ConfirmOTPSerializer(Serializer):
         else:
             msg = _('Unable to log in with provided credentials.')
             raise serializers.ValidationError(msg)
+
+
+class CompleteRegistrySerializer(ModelSerializer):
+    class Meta:
+        model = models.User
+        fields = ["first_name", "last_name", "avatar"]

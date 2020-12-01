@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import permission_classes
 from rest_framework import views, generics
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_jwt.settings import api_settings
 from rest_framework_jwt.views import ObtainJSONWebToken
 from django.core.files.base import ContentFile
@@ -56,6 +56,14 @@ class ConfirmOtpAPIView(ObtainJSONWebToken):
 
         except models.OTP.DoesNotExist:  # if OTP with this mobile number not exists
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+class CompleteRegistryUpdateAPIView(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = serializers.CompleteRegistrySerializer
+
+    def get_object(self):
+        return self.request.user
 
 
 # @permission_classes((AllowAny,))
