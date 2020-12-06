@@ -5,7 +5,7 @@ from django_jalali.db import models as jalali_models
 class Organization(models.Model):
     complete_name = models.CharField(max_length=200, unique=True)
     short_name = models.CharField(max_length=100, unique=True)
-    logo = models.ImageField(upload_to="organization/")
+    logo = models.ImageField(upload_to="organization/",null=True)
     creator = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True, blank=True)
     create_at = jalali_models.jDateTimeField(auto_now_add=True)
     update_at = jalali_models.jDateTimeField(auto_now=True)

@@ -65,7 +65,16 @@ class OrganizationSerializer(ModelSerializer):
 
     class Meta:
         model = models.Organization
-        fields = ["id", "complete_name", "short_name", "logo"]
+        fields = ["id", "complete_name", "short_name", "logo", "creator"]
+        read_only_fields = ["id", "creator"]
+
+    @staticmethod
+    def validate_complete_name(complete_name):
+        return str(complete_name).strip()
+
+    @staticmethod
+    def validate_short_name(short_name):
+        return str(short_name).strip()
 
 
 class EmployeeOfCompanyRetrieveSerializer(ModelSerializer):
@@ -96,7 +105,18 @@ class FactoryRetrieveSerializer(ModelSerializer):
         fields = ["id", "organization", "name", "is_central_office", "creator", "employees", "groups"]
 
 
-class FactoryCreateSerializer(ModelSerializer):
+class FactoryCreateByExistedOrganizationSerializer(ModelSerializer):
+    class Meta:
+        model = models.Factory
+        fields = ["organization", "name", "is_central_office"]
+
+    def to_representation(self, instance):
+        return FactoryRetrieveSerializer(context=self.context).to_representation(instance=instance)
+
+
+class FactoryCreateByNotExistedOrganizationSerializer(ModelSerializer):
+    organization = OrganizationSerializer()
+
     class Meta:
         model = models.Factory
         fields = ["organization", "name", "is_central_office"]
@@ -112,7 +132,7 @@ class JobTitleSerializer(ModelSerializer):
 
 
 class CreateNewFactoryByExistedOrganization(Serializer):
-    factory = FactoryCreateSerializer()
+    factory = FactoryCreateByExistedOrganizationSerializer()
     group_name = serializers.CharField()
     job_title = serializers.CharField()
 
@@ -139,4 +159,40 @@ class CreateNewFactoryByExistedOrganization(Serializer):
         return factory
 
     def to_representation(self, instance):
-        return FactoryCreateSerializer(context=self.context).to_representation(instance=instance)
+        return FactoryCreateByExistedOrganizationSerializer(context=self.context).to_representation(instance=instance)
+
+
+class CreateNewFactoryByNotExistedOrganization(Serializer):
+    factory = FactoryCreateByNotExistedOrganizationSerializer()
+    group_name = serializers.CharField()
+    job_title = serializers.CharField()
+
+    @staticmethod
+    def validate_job_title(job_title):
+        job_title_qs = models.JobTitle.objects.filter(title=str(job_title).strip())
+        if job_title_qs.exists():
+            return job_title_qs.first()
+        else:
+            job_title_serializer = JobTitleSerializer(data={"title": job_title})
+            job_title_serializer.is_valid(raise_exception=True)
+            job_title = job_title_serializer.save()
+            return job_title
+
+    def create(self, validated_data):
+        factory_data = validated_data["factory"].copy()
+        factory_data["creator"] = validated_data["creator"]
+        organisation_data = validated_data["factory"]["organization"].copy()
+        organisation_data["creator"] = validated_data["creator"]
+        organization = models.Organization.objects.create(**organisation_data)
+        factory_data["organization"] = organization
+        factory = models.Factory.objects.create(**factory_data)
+        group = models.Group.objects.create(name=validated_data["group_name"])
+        employee = models.Employee.objects.create(factory=factory, user=validated_data["creator"],
+                                                  job_title=validated_data["job_title"], is_admin=True,
+                                                  use_license=True)
+        group.employees.add(employee)
+        return factory
+
+    def to_representation(self, instance):
+        return FactoryCreateByNotExistedOrganizationSerializer(context=self.context).to_representation(
+            instance=instance)

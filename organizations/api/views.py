@@ -12,15 +12,16 @@ class OrganizationListAPIView(generics.ListAPIView):
 
 
 class FactoryCreateByExistedOrganization(generics.CreateAPIView):
-    # permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     serializer_class = serializers.CreateNewFactoryByExistedOrganization
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+class FactoryCreateByNotExistedOrganization(generics.CreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = serializers.CreateNewFactoryByNotExistedOrganization
+
+    def perform_create(self, serializer):
+        serializer.save(creator=self.request.user)

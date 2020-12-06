@@ -4,5 +4,7 @@ from .api import views
 urlpatterns = [
     path("organization/list/", views.OrganizationListAPIView.as_view(), name="organization_list"),
     path("factories/existed-organization/", views.FactoryCreateByExistedOrganization.as_view(),
-         name="create_factory_existed_organization")
+         name="create_factory_existed_organization"),
+    path("factories/not-existed-organization/", views.FactoryCreateByNotExistedOrganization.as_view(),
+         name="create_factory_not_existed_organization")
 ]
