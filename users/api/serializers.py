@@ -188,3 +188,25 @@ class CompleteRegistrySerializer(ModelSerializer):
     class Meta:
         model = models.User
         fields = ["first_name", "last_name", "avatar"]
+
+
+class ConfirmLoginOTPGeneralSerializer(OTPCreateSerializer, ConfirmOTPSerializer):
+    """
+    serializer for login with otp with session or jwt
+    """
+
+    class Meta:
+        model = models.OTP
+        fields = ["otp", "expired"]
+        read_only_fields = ["expired"]
+
+    def validate(self, attrs):
+        """
+        validate generally
+        if not exists  user with  this mobile number raise validation Error
+        """
+        self.instance: models.OTP
+        if not models.User.objects.filter(
+                mobile=self.instance.mobile).exists():  # if user existed with this mobile send error
+            raise ValidationError("کاربر با این شماره موبایل قبلا ثبت نام نکرده است")
+        return attrs
