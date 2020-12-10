@@ -5,7 +5,7 @@ from rest_framework_jwt.views import ObtainJSONWebToken
 from .. import models
 from rest_framework import generics
 
-from . import  serializers
+from . import serializers
 from rest_framework import permissions
 from django.contrib.auth import (
     login as django_login,
@@ -32,9 +32,6 @@ sensitive_post_parameters_m = method_decorator(
 sensitive_post_parameters_m = method_decorator(
     sensitive_post_parameters('password1', 'password2')
 )
-
-
-
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
@@ -181,3 +178,12 @@ class VerifyLoginWithSessionView(APIView):
 
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+class ProfileAPIView(generics.RetrieveUpdateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = models.User.objects.all()
+    serializer_class = serializers.ProfileSerializer
+
+    def get_object(self):
+        return self.request.user

@@ -62,11 +62,12 @@ class OrganizationSerializer(ModelSerializer):
     """
     Organization Serializer
     """
+    creator = UserSerializer(read_only=True)
 
     class Meta:
         model = models.Organization
-        fields = ["id", "complete_name", "short_name", "logo", "creator"]
-        read_only_fields = ["id", "creator"]
+        fields = ["id", "complete_name", "short_name", "logo", "creator", "create_at", "update_at"]
+        read_only_fields = ["id", "creator", "create_at", "update_at"]
 
     @staticmethod
     def validate_complete_name(complete_name):
@@ -196,3 +197,19 @@ class CreateNewFactoryByNotExistedOrganization(Serializer):
     def to_representation(self, instance):
         return FactoryCreateByNotExistedOrganizationSerializer(context=self.context).to_representation(
             instance=instance)
+
+
+class FactorySerializer(ModelSerializer):
+    creator = UserSerializer(read_only=True)
+    organization = OrganizationSerializer(read_only=True)
+
+    class Meta:
+        model = models.Factory
+        fields = ["id", "name", "is_central_office", "creator", "organization"]
+
+
+# class AddEmployeeSerializer(ModelSerializer):
+#     mobile
+#     class Meta:
+#         model = models.Employee
+#         fields = []

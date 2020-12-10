@@ -45,8 +45,7 @@ class User(AbstractUser):
     username = None
     email = None
     password = None
-    mobile = models.CharField(max_length=32, unique=True)
-    national_code = models.CharField(max_length=20, blank=True, null=True)
+    mobile = models.CharField(max_length=12, unique=True)
     avatar = models.ImageField(upload_to='users/', blank=True, null=True)
     email = models.EmailField(null=True, blank=True)
     USERNAME_FIELD = 'mobile'

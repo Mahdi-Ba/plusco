@@ -5,7 +5,7 @@ from django_jalali.db import models as jalali_models
 class Organization(models.Model):
     complete_name = models.CharField(max_length=200, unique=True)
     short_name = models.CharField(max_length=100, unique=True)
-    logo = models.ImageField(upload_to="organization/",null=True)
+    logo = models.ImageField(upload_to="organization/", null=True)
     creator = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True, blank=True)
     create_at = jalali_models.jDateTimeField(auto_now_add=True)
     update_at = jalali_models.jDateTimeField(auto_now=True)
@@ -65,3 +65,12 @@ class Group(models.Model):
                 self.employees[0].factory
             except:
                 return None
+
+
+class JoinFactoryRequest(models.Model):
+    factory = models.ForeignKey("Factory", on_delete=models.CASCADE)
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE)
+    job_title = models.ForeignKey("JobTitle", on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user.name} => {self.factory.name}"

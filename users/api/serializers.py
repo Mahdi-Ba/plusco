@@ -62,7 +62,6 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
     first_name = serializers.CharField(max_length=200, required=False)
     last_name = serializers.CharField(max_length=200, required=False)
-    national_code = serializers.CharField(max_length=200, required=False, allow_blank=True)
     birth_date = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     mobile = serializers.CharField(read_only=False, required=False)
     file = serializers.ImageField(required=False, allow_null=True)
@@ -71,7 +70,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.User
-        fields = ['id', 'mobile', 'first_name', 'last_name', 'national_code', 'password', 'expire_pass', 'birth_date',
+        fields = ['id', 'mobile', 'first_name', 'last_name', 'password', 'expire_pass', 'birth_date',
                   'file', 'trusted']
 
     def create(self, validated_data):
@@ -83,7 +82,6 @@ class UserSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)
-        instance.national_code = validated_data.get('national_code', instance.national_code)
         instance.birth_date = validated_data.get('birth_date', instance.birth_date)
         instance.file = validated_data.get('file', instance.file)
         instance.save()
@@ -185,6 +183,9 @@ class ConfirmOTPSerializer(Serializer):
 
 
 class CompleteRegistrySerializer(ModelSerializer):
+    first_name = serializers.CharField(allow_blank=False, allow_null=False)
+    last_name = serializers.CharField(allow_null=False, allow_blank=False)
+
     class Meta:
         model = models.User
         fields = ["first_name", "last_name", "avatar"]
@@ -210,3 +211,13 @@ class ConfirmLoginOTPGeneralSerializer(OTPCreateSerializer, ConfirmOTPSerializer
                 mobile=self.instance.mobile).exists():  # if user existed with this mobile send error
             raise ValidationError("کاربر با این شماره موبایل قبلا ثبت نام نکرده است")
         return attrs
+
+
+class ProfileSerializer(ModelSerializer):
+    first_name = serializers.CharField(allow_blank=False, allow_null=False)
+    last_name = serializers.CharField(allow_null=False, allow_blank=False)
+
+    class Meta:
+        model = models.User
+        fields = ["id", "mobile", "avatar", "first_name", "last_name"]
+        read_only_fields = ["id", "mobile"]
