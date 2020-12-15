@@ -14,13 +14,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env("SECRET_KEY", default='x7fr16u^9_z_^c^!5@1l)=m!6uo_es4mcem+%uvs66l7-oi_!s')
+SECRET_KEY = 'x7fr16u^9_z_^c^!5@1l)=m!6uo_es4mcem+%uvs66l7-oi_!s'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env("DEBUG", default=True)
+DEBUG = True
 
-ALLOWED_HOSTS = env.list("HOSTS", default=['www.api.plascoapp.com/', 'plusco.com', '127.0.0.1', '185.97.119.108',
-                                           'api.plascoapp.com'])
+ALLOWED_HOSTS = ['www.api.plascoapp.com/', 'plusco.com', '127.0.0.1', '185.97.119.108',
+                                           'api.plascoapp.com']
 
 BASE_URL = "http://api.plascoapp.com/"
 
