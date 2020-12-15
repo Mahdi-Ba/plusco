@@ -3,8 +3,10 @@ from django_jalali.db import models as jalali_models
 
 
 class Organization(models.Model):
-    complete_name = models.CharField(max_length=200, unique=True)
-    short_name = models.CharField(max_length=100, unique=True)
+    complete_name = models.CharField(max_length=200, unique=True,
+                                     error_messages={"unique": "این نام سازمان تکراری میباشد"})
+    short_name = models.CharField(max_length=100, unique=True,
+                                  error_messages={"unique": "این نام سازمان تکراری میباشد"})
     logo = models.ImageField(upload_to="organization/", null=True)
     creator = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True, blank=True)
     create_at = jalali_models.jDateTimeField(auto_now_add=True)
@@ -22,6 +24,7 @@ class Factory(models.Model):
 
     class Meta:
         unique_together = ("organization", "name")
+
 
     @property
     def groups(self):
@@ -44,8 +47,10 @@ class Employee(models.Model):
     job_title = models.ForeignKey("JobTitle", on_delete=models.SET_NULL, null=True, blank=True)
     is_admin = models.BooleanField(default=False)
     use_license = models.BooleanField(default=True)
-
-    # TODO  add status  for employee (pending,reject,....)
+    status = models.CharField(max_length=1, choices={
+        ("a", "active"),
+        ("l", "left")
+    },default="a")
 
     class Meta:
         unique_together = ("factory", "user")
@@ -71,6 +76,11 @@ class JoinFactoryRequest(models.Model):
     factory = models.ForeignKey("Factory", on_delete=models.CASCADE)
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
     job_title = models.ForeignKey("JobTitle", on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.CharField(max_length=1, choices={
+        ("p", "pending"),
+        ("r", "reject"),
+        ("a", "accepted")
+    })
 
     def __str__(self):
         return f"{self.user.name} => {self.factory.name}"

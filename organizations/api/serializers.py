@@ -1,7 +1,21 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.fields import empty
+from rest_framework.validators import UniqueTogetherValidator
+
 from .. import models
 from users.models import User
+
+ERROR_MESSAGES = {
+    "blank": "این فیلد الزامی است",
+    "null": "این فیلد الزامی است",
+    "required": "این فیلد الزامی است",
+    "invalid": "قالب این فیلد صحیح نمی‌باشد",
+    "max_length": "اندازه‌ی این ورودی طولانی است",
+    "min_length": "اندازه‌ی این ورودی کوچک است.",
+    "unique": "این فیلد تکراری است",
+    "unique_together": "این فیلدها تکرارین"
+}
 
 
 class ModelSerializer(serializers.ModelSerializer):
@@ -12,15 +26,7 @@ class ModelSerializer(serializers.ModelSerializer):
     def __init__(self, instance=None, data=empty, **kwargs):
         super(ModelSerializer, self).__init__(instance, data, **kwargs)
         for field in self.fields:
-            self.fields[field].error_messages.update({
-                "blank": "این فیلد الزامی است",
-                "null": "این فیلد الزامی است",
-                "required": "این فیلد الزامی است",
-                "invalid": "قالب این فیلد صحیح نمی‌باشد",
-                "max_length": "اندازه‌ی این ورودی طولانی است",
-                "min_length": "اندازه‌ی این ورودی کوچک است.",
-            }
-            )
+            self.fields[field].error_messages.update(ERROR_MESSAGES)
 
 
 class Serializer(serializers.Serializer):
@@ -31,15 +37,7 @@ class Serializer(serializers.Serializer):
     def __init__(self, instance=None, data=empty, **kwargs):
         super(Serializer, self).__init__(instance, data, **kwargs)
         for field in self.fields:
-            self.fields[field].error_messages.update({
-                "blank": "این فیلد الزامی است",
-                "null": "این فیلد الزامی است",
-                "required": "این فیلد الزامی است",
-                "invalid": "قالب این فیلد صحیح نمی‌باشد",
-                "max_length": "اندازه‌ی این ورودی طولانی است",
-                "min_length": "اندازه‌ی این ورودی کوچک است.",
-            }
-            )
+            self.fields[field].error_messages.update(ERROR_MESSAGES)
 
     def update(self, instance, validated_data):
         pass
@@ -96,7 +94,7 @@ class FactoryRetrieveSerializer(ModelSerializer):
     """
     Factory Retrieve Serializer
     """
-    organization = OrganizationSerializer(read_only=True)
+    organization = OrganizationSerializer(read_only=True, error_messages={"unique": "این فیلد تکراری است"})
     creator = UserSerializer(read_only=True)
     employees = EmployeeOfCompanyRetrieveSerializer(many=True, read_only=True)
     groups = GroupOfFactorySerializer(many=True, read_only=True)
@@ -104,12 +102,18 @@ class FactoryRetrieveSerializer(ModelSerializer):
     class Meta:
         model = models.Factory
         fields = ["id", "organization", "name", "is_central_office", "creator", "employees", "groups"]
+        validators = [UniqueTogetherValidator(message='این کارگاه برای این سازمان قبلا ثبت شده است',
+                                              fields=("name", "organization"),
+                                              queryset=models.Factory.objects.all())]
 
 
 class FactoryCreateByExistedOrganizationSerializer(ModelSerializer):
     class Meta:
         model = models.Factory
         fields = ["organization", "name", "is_central_office"]
+        validators = [UniqueTogetherValidator(message='این کارگاه برای این سازمان قبلا ثبت شده است',
+                                              fields=("name", "organization"),
+                                              queryset=models.Factory.objects.all())]
 
     def to_representation(self, instance):
         return FactoryRetrieveSerializer(context=self.context).to_representation(instance=instance)
@@ -133,6 +137,9 @@ class JobTitleSerializer(ModelSerializer):
 
 
 class CreateNewFactoryByExistedOrganization(Serializer):
+    """
+    create factory with group_name  and job_title
+    """
     factory = FactoryCreateByExistedOrganizationSerializer()
     group_name = serializers.CharField()
     job_title = serializers.CharField()
@@ -208,8 +215,50 @@ class FactorySerializer(ModelSerializer):
         fields = ["id", "name", "is_central_office", "creator", "organization"]
 
 
-# class AddEmployeeSerializer(ModelSerializer):
-#     mobile
-#     class Meta:
-#         model = models.Employee
-#         fields = []
+class AddEmployeeSerializer(ModelSerializer):
+    mobile = serializers.CharField(max_length=10, min_length=10, write_only=True)
+    job_title = serializers.CharField()
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = models.Employee
+        fields = ["id", "mobile", "job_title", "is_admin", "use_license", "user", "status"]
+        read_only_fields = ["id", "user", "status"]
+
+    @staticmethod
+    def validate_mobile(mobile):
+        """
+        validate mobile number
+        """
+
+        if len(str(mobile)) != 10 or str(mobile)[0] != "9":
+            raise ValidationError("قالب شماره‌‌ی موبایل نادرست می‌‌باشد")  # if format of mobile is wrong
+
+        return mobile
+
+    @staticmethod
+    def validate_job_title(job_title):
+        return str(job_title).strip()
+
+    def create(self, validated_data):
+        user_qs = User.objects.filter(mobile=validated_data["mobile"])
+        if user_qs.exists():
+            user = user_qs.first()
+
+        else:
+            user = User.objects.create(mobile=validated_data["mobile"])
+
+        job_title_qs = models.JobTitle.objects.filter(title=validated_data["job_title"])
+        if job_title_qs.exists():
+            job_title = job_title_qs.first()
+        else:
+            job_title = models.JobTitle.objects.create(title=validated_data["job_title"])
+
+        if models.Employee.objects.filter(factory=validated_data["factory"], user=user).exists():
+            raise ValidationError("این کارمند قبلا ثبت شده است")
+
+        instance = models.Employee.objects.create(factory=validated_data["factory"], user=user, job_title=job_title,
+                                                  is_admin=validated_data["is_admin"],
+                                                  use_license=validated_data["use_license"])
+
+        return instance
