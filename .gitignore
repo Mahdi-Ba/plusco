@@ -20,5 +20,3 @@ coverage.*
 /media
 /venv/
 db.sqlite3
-*/migrations/
-*/migrations/*
