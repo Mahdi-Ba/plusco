@@ -17,7 +17,7 @@ django-excel-base==1.0.4
 django-excel-response2==3.0.2
 django-filer==1.7.0
 django-filter==2.4.0
-django-jalali==4.0.0
+django-jalali==4.1.0
 django-jalali-date-3==0.2.1
 django-js-asset==1.2.2
 django-json-widget==1.0.1
@@ -54,7 +54,6 @@ MarkupSafe==1.1.1
 mysqlclient==1.4.6
 packaging==20.3
 Pillow==7.1.1
-pkg-resources==0.0.0
 pycodestyle==2.6.0
 pyfcm==1.4.7
 Pygments==2.6.1
